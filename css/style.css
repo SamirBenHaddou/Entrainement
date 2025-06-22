@@ -1,276 +1,168 @@
-/* Reset basique */
-* {
-  box-sizing: border-box;
-}
-
+/* Style général */
 body {
   font-family: Arial, sans-serif;
   margin: 0;
-  padding: 0;
-  background: #f7f9fc;
-  color: #333;
+  padding: 1rem;
+  background-color: #f9f9f9;
+  color: #222;
 }
 
-/* Header général */
 .header {
-  background: #007bff;
-  color: white;
-  padding: 1em;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Message de bienvenue */
-.welcome {
-  font-size: 1.2em;
-  margin: 0;
-}
-
-/* Formulaire déconnexion en ligne */
-.logout-form {
-  margin: 0;
-}
-
-/* Bouton déconnexion */
-.btn-logout {
-  background: #dc3545;
-  border: none;
-  color: white;
-  padding: 0.5em 1em;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.btn-logout:hover {
-  background-color: #b52b34;
-}
-
-/* Main et contenu */
-main {
-  padding: 1em;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-/* Login/Inscription - formulaire */
-.login-form,
-.container form {
-  max-width: 320px;
-  margin: 5em auto 2em auto;
-  padding: 2em;
-  background: white;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.login-form h2,
-.container h2 {
-  margin-top: 0;
-  margin-bottom: 1em;
   text-align: center;
-  color: #007bff;
+  margin-bottom: 1rem;
 }
 
-.login-form label,
-.container label {
-  display: block;
-  margin-bottom: 0.6em;
+/* Formulaire date */
+.form-date {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.form-date label {
   font-weight: 600;
-}
-
-.login-form input,
-.container input {
-  width: 100%;
-  padding: 0.5em;
-  margin-top: 0.3em;
-  margin-bottom: 1em;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1em;
-}
-
-.login-form button,
-.container button {
-  width: 100%;
-  background: #007bff;
-  border: none;
-  color: white;
-  padding: 0.7em;
-  font-size: 1.1em;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.login-form button:hover,
-.container button:hover {
-  background: #0056b3;
-}
-
-/* Messages d'erreur et succès */
-.error {
-  color: red;
-  text-align: center;
-  margin-bottom: 1em;
-}
-
-.success {
-  color: green;
-  text-align: center;
-  margin-bottom: 1em;
-}
-
-/* Liens pour basculer login/inscription */
-.switch-link {
-  color: #007bff;
-  cursor: pointer;
-  text-decoration: underline;
-  display: inline-block;
-  margin-top: 1em;
-  text-align: center;
-}
-
-/* Cacher éléments */
-.hidden {
-  display: none;
-}
-
-/* Cartes exercices */
-.card {
-  background: white;
-  border-radius: 6px;
-  box-shadow: 0 2px 5px rgb(0 0 0 / 0.1);
-  padding: 1em;
-  cursor: pointer;
-  perspective: 1000px;
-  width: 260px;
-  margin: 10px;
-  display: inline-block;
-  vertical-align: top;
-  transition: transform 0.6s;
-  transform-style: preserve-3d;
-  user-select: none;
-  position: relative;
-  min-height: 140px;
-}
-
-.card.flipped {
-  transform: rotateY(180deg);
-}
-
-.card .front,
-.card .back {
-  backface-visibility: hidden;
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  box-sizing: border-box;
-  overflow-wrap: break-word;
-}
-
-.card .front {
-  padding: 1em;
-  color: #007bff;
-  font-weight: 700;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
-  border: 2px solid #007bff;
-  border-radius: 6px;
-}
-
-.card .back {
-  background: #e3f2fd;
-  padding: 1em;
-  border-radius: 6px;
-  transform: rotateY(180deg);
-  overflow-y: auto;
-  font-weight: 500;
-  font-size: 0.9em;
-  color: #333;
-}
-
-/* Conteneur des cartes */
-.cards-container {
-  text-align: center;
-  margin-bottom: 2em;
+  margin-right: 0.5rem;
 }
 
 /* Filtres catégories */
 .filters {
-  margin: 1em 0;
   text-align: center;
+  margin-bottom: 1.5rem;
 }
 
-.filters button {
-  margin: 0 0.3em 0.5em 0.3em;
-  padding: 0.4em 0.8em;
+.filters a {
+  display: inline-block;
+  margin: 0 0.5rem 0.5rem 0.5rem;
+  padding: 0.4rem 1rem;
   border: 1px solid #007bff;
   border-radius: 20px;
-  background: white;
   color: #007bff;
-  cursor: pointer;
   font-weight: 600;
+  text-decoration: none;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.filters button.active {
-  background: #007bff;
-  color: white;
+.filters a:hover,
+.filters a.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/* Container cartes */
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* Carte interactive */
+.card {
+  width: 250px;
+  height: 150px;
+  perspective: 800px;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  outline: none;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border: 1px solid #007bff;
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.card-front {
+  background-color: #e9f0ff;
+  color: #007bff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  font-size: 1.2em;
+  text-align: center;
+}
+
+.card-back {
+  background-color: #c4d8ff;
+  color: #003366;
+  transform: rotateY(180deg);
+  font-size: 0.9em;
+  overflow-y: auto;
+}
+
+/* Formulaires dans cartes */
+.form-ajout-exercice,
+.form-supprimer-exercice {
+  margin-top: 10px;
+}
+
+.form-ajout-exercice button,
+.form-supprimer-exercice button {
+  padding: 0.3rem 0.6rem;
+  font-size: 1em;
+  font-weight: 600;
+  color: #fff;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.form-ajout-exercice button:hover,
+.form-supprimer-exercice button:hover {
+  background-color: #0056b3;
 }
 
 /* Liste des exercices sélectionnés */
 .selection-list {
-  margin-top: 1em;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 700px;
+  margin: 0 auto 2rem auto;
   padding: 0;
   list-style: none;
 }
 
 .selection-list li {
-  background: #e9ecef;
-  margin-bottom: 0.3em;
-  padding: 0.5em 1em;
-  border-radius: 3px;
+  background: #f0f5ff;
+  padding: 8px 15px;
+  margin-bottom: 8px;
+  border-radius: 5px;
+  font-weight: 600;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: 600;
-  font-size: 1em;
-  user-select: none;
 }
 
 .selection-list button {
-  background: transparent;
+  background: none;
   border: none;
   color: #dc3545;
+  font-size: 1.4em;
   cursor: pointer;
-  font-weight: bold;
-  font-size: 1.2em;
-  line-height: 1;
-  padding: 0 0.3em;
-  transition: color 0.3s ease;
+  font-weight: 700;
 }
 
 .selection-list button:hover {
   color: #a71d2a;
-}
-
-/* Responsive basique */
-@media (max-width: 768px) {
-  .card {
-    width: 90%;
-    margin: 10px auto;
-  }
-  main {
-    padding: 1em 0.5em;
-  }
 }
