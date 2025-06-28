@@ -1,9 +1,10 @@
+<?php
 session_start();
 if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit;
 }
-$email = $_SESSION['email'];
+$email = isset($_SESSION['email']) ? $_SESSION['email'] : 'Utilisateur';
 ?>
 
 <!DOCTYPE html>

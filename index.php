@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$_POST['email']]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($user && password_verify($_POST['password'], $user['password'])) {
+                // Après avoir vérifié le mot de passe et trouvé l'utilisateur :
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['email'] = $user['email'];
                 header('Location: home.php');
