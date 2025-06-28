@@ -1,25 +1,183 @@
 <?php
-// === 3. exercices.php (API pour récupérer les exercices) ===
 session_start();
 if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    exit('Non autorisé');
-}
-
-header('Content-Type: application/json');
-
-try {
-    $pdo = new PDO('mysql:host=localhost;dbname=entrainement', 'root', 'BeagroupSamir!', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
-    
-    // Récupérer tous les exercices sans filtre d'âge fixe
-    $stmt = $pdo->query('SELECT * FROM exercices ORDER BY categorie, nom');
-    $exercices = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    
-    echo json_encode($exercices);
-} catch (Exception $e) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Erreur base de données: ' . $e->getMessage()]);
+    header('Location: index.php');
+    exit;
 }
 ?>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des exercices</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>🏋️‍♂️ Gestion des Exercices</h1>
+        <a href="home.php" class="home-btn">🏠 Accueil</a>
+    </div>
+
+    <div class="main-container">
+        <div class="form-section">
+            <h2 class="section-title">Ajouter / Modifier</h2>
+            <form id="ex-form" class="add-form">
+                <input type="hidden" id="ex-id" value="">
+                
+                <label for="ex-nom">Nom de l'exercice</label>
+                <input type="text" id="ex-nom" required>
+                
+                <label for="ex-categorie">Catégorie</label>
+                <input type="text" id="ex-categorie" required>
+                
+                <label for="ex-description">Description</label>
+                <textarea id="ex-description" required></textarea>
+                
+                <label for="ex-duree">Durée (minutes)</label>
+                <input type="number" id="ex-duree" min="1" required>
+                
+                <label for="ex-materiel">Matériel nécessaire</label>
+                <input type="text" id="ex-materiel">
+                
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-add" id="ex-submit">Ajouter</button>
+                    <button type="button" class="btn btn-cancel" id="ex-cancel">Annuler</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="exercises-section">
+            <h2 class="section-title">Mes Exercices</h2>
+            <div class="exercises-grid" id="exercises">
+                <div class="loading">Chargement des exercices...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chargement et affichage des exercices
+        function loadExercises() {
+            fetch('api_exercices.php')
+                .then(res => res.json())
+                .then(data => {
+                    const grid = document.getElementById('exercises');
+                    if (data.error) {
+                        grid.innerHTML = `<div class="empty-state">${data.error}</div>`;
+                        return;
+                    }
+                    grid.innerHTML = data.map(ex =>
+                        `<div class="exercise-card" onclick="this.classList.toggle('flipped')">
+                            <div class="card-inner">
+                                <div class="card-front">
+                                    <div class="exercise-title">${ex.nom}</div>
+                                    <div class="exercise-category">${ex.categorie}</div>
+                                    <div class="exercise-duration">${ex.duree} min</div>
+                                    <div class="card-actions">
+                                        <button class="btn btn-edit" onclick="event.stopPropagation();editExercise(${ex.id}, '${escapeQuotes(ex.nom)}', '${escapeQuotes(ex.categorie)}', '${escapeQuotes(ex.description)}', '${ex.duree}', '${escapeQuotes(ex.materiel)}')">Modifier</button>
+                                        <button class="btn btn-delete" onclick="event.stopPropagation();deleteExercise(${ex.id})">Supprimer</button>
+                                    </div>
+                                </div>
+                                <div class="card-back">
+                                    <div class="exercise-details">
+                                        <div class="detail-item">
+                                            <strong>Description :</strong><br>
+                                            ${ex.description || 'Aucune description'}
+                                        </div>
+                                        <div class="detail-item">
+                                            <strong>Durée :</strong> ${ex.duree} minutes
+                                        </div>
+                                        <div class="detail-item">
+                                            <strong>Matériel :</strong><br>
+                                            ${ex.materiel || 'Aucun matériel requis'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`
+                    ).join('');
+                });
+        }
+
+        // Ajout ou modification d'un exercice
+        document.getElementById('ex-form').onsubmit = function(e) {
+            e.preventDefault();
+            const id = document.getElementById('ex-id').value;
+            const nom = document.getElementById('ex-nom').value;
+            const categorie = document.getElementById('ex-categorie').value;
+            const description = document.getElementById('ex-description').value;
+            const duree = document.getElementById('ex-duree').value;
+            const materiel = document.getElementById('ex-materiel').value;
+            const formData = new URLSearchParams({
+                id, nom, categorie, description, duree, materiel,
+                action: id ? 'modifier' : 'ajouter'
+            });
+            fetch('api_exercices.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    resetForm();
+                    loadExercises();
+                } else {
+                    alert(data.error || "Erreur lors de l'enregistrement.");
+                }
+            });
+        };
+
+        // Pré-remplir le formulaire pour modification
+        function editExercise(id, nom, categorie, description, duree, materiel) {
+            document.getElementById('ex-id').value = id;
+            document.getElementById('ex-nom').value = nom;
+            document.getElementById('ex-categorie').value = categorie;
+            document.getElementById('ex-description').value = description;
+            document.getElementById('ex-duree').value = duree;
+            document.getElementById('ex-materiel').value = materiel;
+            document.getElementById('ex-submit').textContent = "Modifier";
+            document.getElementById('ex-cancel').style.display = "block";
+        }
+
+        // Annuler la modification
+        document.getElementById('ex-cancel').onclick = resetForm;
+        function resetForm() {
+            document.getElementById('ex-form').reset();
+            document.getElementById('ex-id').value = "";
+            document.getElementById('ex-submit').textContent = "Ajouter";
+            document.getElementById('ex-cancel').style.display = "none";
+        }
+
+        // Suppression d'un exercice
+        function deleteExercise(id) {
+            if (!confirm("Supprimer cet exercice ?")) return;
+            fetch('api_exercices.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: new URLSearchParams({id, action: 'supprimer'})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    loadExercises();
+                } else {
+                    alert(data.error || "Erreur lors de la suppression.");
+                }
+            });
+        }
+
+        // Sécurité pour les quotes dans les attributs HTML
+        function escapeQuotes(str) {
+            return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        // Initialisation au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadExercises();
+            // Masquer le bouton annuler par défaut
+            document.getElementById('ex-cancel').style.display = "none";
+        });
+    </script>
+</body>
+</html>
