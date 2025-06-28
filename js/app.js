@@ -50,7 +50,16 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jour, exercices: ids }),
-    });
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          resetForm();
+          loadExercises();
+        } else {
+          alert(data.error || JSON.stringify(data) || "Erreur lors de l'enregistrement.");
+        }
+      });
   }
 
   function toggleFlip(id) {
