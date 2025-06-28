@@ -1,4 +1,5 @@
 <?php
+// === 1. index.php ===
 session_start();
 
 $pdo = new PDO('mysql:host=localhost;dbname=entrainement', 'root', 'BeagroupSamir!');
@@ -60,47 +61,143 @@ if (isset($_SESSION['user_id'])) {
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connexion / Inscription - Entrainement</title>
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    /* Simple styles pour switch form */
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 400px;
+      width: 100%;
+      padding: 2em;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      color: white;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5em;
+      font-size: 2rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5em;
+      font-weight: 500;
+    }
+
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 12px 15px;
+      margin-bottom: 1em;
+      border: none;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      font-size: 16px;
+    }
+
+    input[type="email"]::placeholder, input[type="password"]::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 12px;
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 1em;
+    }
+
+    button[type="submit"]:hover {
+      background: #ff5252;
+      transform: translateY(-2px);
+    }
+
     .switch-link {
-      color: #007bff;
+      color: #ffd93d;
       cursor: pointer;
       text-decoration: underline;
+      transition: color 0.3s ease;
     }
+
+    .switch-link:hover {
+      color: #ffed4e;
+    }
+
     .hidden {
       display: none;
+    }
+
+    .error {
+      color: #ff6b6b;
+      background: rgba(255, 107, 107, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 1em;
+      text-align: center;
+    }
+
+    .success {
+      color: #4ecdc4;
+      background: rgba(78, 205, 196, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 1em;
+      text-align: center;
     }
   </style>
 </head>
 <body>
 
-  <div class="container" style="max-width: 350px; margin: 4em auto; padding: 2em; background: white; border: 1px solid #ccc; border-radius: 6px;">
-    <h2 id="form-title">Connexion</h2>
+  <div class="container">
+    <h2 id="form-title">🏃‍♂️ Connexion</h2>
 
     <?php if ($error): ?>
-      <p style="color:red;"><?= htmlspecialchars($error) ?></p>
+      <div class="error"><?= htmlspecialchars($error) ?></div>
     <?php elseif ($success): ?>
-      <p style="color:green;"><?= htmlspecialchars($success) ?></p>
+      <div class="success"><?= htmlspecialchars($success) ?></div>
     <?php endif; ?>
 
     <form id="login-form" method="POST" <?= $success ? 'class="hidden"' : '' ?>>
       <input type="hidden" name="action" value="login" />
-      <label>Email<br><input type="email" name="email" required></label><br><br>
-      <label>Mot de passe<br><input type="password" name="password" required></label><br><br>
-      <button type="submit" style="width: 100%;">Se connecter</button>
+      <label>Email</label>
+      <input type="email" name="email" placeholder="votre@email.com" required>
+      <label>Mot de passe</label>
+      <input type="password" name="password" placeholder="••••••••" required>
+      <button type="submit">Se connecter</button>
     </form>
 
     <form id="register-form" method="POST" class="hidden">
       <input type="hidden" name="action" value="register" />
-      <label>Email<br><input type="email" name="email" required></label><br><br>
-      <label>Mot de passe<br><input type="password" name="password" required></label><br><br>
-      <label>Confirmer mot de passe<br><input type="password" name="password_confirm" required></label><br><br>
-      <button type="submit" style="width: 100%;">Créer un compte</button>
+      <label>Email</label>
+      <input type="email" name="email" placeholder="votre@email.com" required>
+      <label>Mot de passe</label>
+      <input type="password" name="password" placeholder="••••••••" required>
+      <label>Confirmer mot de passe</label>
+      <input type="password" name="password_confirm" placeholder="••••••••" required>
+      <button type="submit">Créer un compte</button>
     </form>
 
-    <p style="margin-top: 1em;">
+    <p style="text-align: center; margin-top: 1em;">
       <span id="switch-to-register" class="switch-link">Pas encore de compte ? Inscrivez-vous</span>
       <span id="switch-to-login" class="switch-link hidden">Déjà un compte ? Connectez-vous</span>
     </p>
@@ -118,7 +215,7 @@ if (isset($_SESSION['user_id'])) {
       registerForm.classList.remove('hidden');
       switchToRegister.classList.add('hidden');
       switchToLogin.classList.remove('hidden');
-      formTitle.textContent = 'Inscription';
+      formTitle.textContent = '🏃‍♂️ Inscription';
     });
 
     switchToLogin.addEventListener('click', () => {
@@ -126,7 +223,7 @@ if (isset($_SESSION['user_id'])) {
       loginForm.classList.remove('hidden');
       switchToLogin.classList.add('hidden');
       switchToRegister.classList.remove('hidden');
-      formTitle.textContent = 'Connexion';
+      formTitle.textContent = '🏃‍♂️ Connexion';
     });
   </script>
 
