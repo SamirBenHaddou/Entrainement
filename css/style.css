@@ -176,11 +176,45 @@ body {
   background: #e63946;
 }
 
+/* === FILTRES === */
+.filters {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.filters .filter-btn {
+  display: inline-block;
+  margin: 0 5px 10px 5px;
+  padding: 8px 16px;
+  border: 2px solid #4ecdc4;
+  border-radius: 20px;
+  color: #4ecdc4;
+  background: transparent;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.filters .filter-btn:hover,
+.filters .filter-btn.active {
+  background-color: #4ecdc4;
+  color: white;
+  transform: translateY(-2px);
+}
+
 /* === GRILLE D'EXERCICES === */
 .exercises-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 20px;
+  justify-content: flex-start;
+}
+
+.exercises-grid .exercise-card {
+  flex: 0 0 calc(50% - 10px);
+  min-width: 280px;
 }
 
 /* === CARTES EXERCICES === */
@@ -297,7 +331,12 @@ body {
   }
 
   .exercises-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    flex-direction: column;
+  }
+
+  .exercises-grid .exercise-card {
+    flex: 1 1 100%;
+    min-width: 250px;
   }
 
   .header h1 {

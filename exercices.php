@@ -49,6 +49,16 @@ if (!isset($_SESSION['user_id'])) {
 
         <div class="exercises-section">
             <h2 class="section-title">Mes Exercices</h2>
+            
+            <!-- Filtres par catégorie -->
+            <div class="filters">
+                <button class="filter-btn active" onclick="filterExercises('all')">Tous</button>
+                <button class="filter-btn" onclick="filterExercises('Echauffement')">Echauffement</button>
+                <button class="filter-btn" onclick="filterExercises('Endurance')">Endurance</button>
+                <button class="filter-btn" onclick="filterExercises('Vitesse')">Vitesse</button>
+                <button class="filter-btn" onclick="filterExercises('Agilité')">Agilité</button>
+            </div>
+            
             <div class="exercises-grid" id="exercises">
                 <div class="loading">Chargement des exercices...</div>
             </div>
@@ -56,46 +66,82 @@ if (!isset($_SESSION['user_id'])) {
     </div>
 
     <script>
+        let currentFilter = 'all';
+        let allExercises = [];
+
+        // Filtrage des exercices
+        function filterExercises(category) {
+            currentFilter = category;
+            
+            // Mise à jour des boutons de filtre
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Filtrage et affichage
+            const filteredExercises = category === 'all' 
+                ? allExercises 
+                : allExercises.filter(ex => ex.categorie === category);
+            
+            displayExercises(filteredExercises);
+        }
+
+        // Affichage des exercices
+        function displayExercises(exercises) {
+            const grid = document.getElementById('exercises');
+            if (exercises.length === 0) {
+                grid.innerHTML = '<div class="empty-state">Aucun exercice trouvé pour cette catégorie.</div>';
+                return;
+            }
+            
+            grid.innerHTML = exercises.map(ex =>
+                `<div class="exercise-card" onclick="this.classList.toggle('flipped')">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <div class="exercise-title">${ex.nom}</div>
+                            <div class="exercise-category">${ex.categorie}</div>
+                            <div class="exercise-duration">${ex.duree} min</div>
+                            <div class="card-actions">
+                                <button class="btn btn-edit" onclick="event.stopPropagation();editExercise(${ex.id}, '${escapeQuotes(ex.nom)}', '${escapeQuotes(ex.categorie)}', '${escapeQuotes(ex.description)}', '${ex.duree}', '${escapeQuotes(ex.materiel)}')">Modifier</button>
+                                <button class="btn btn-delete" onclick="event.stopPropagation();deleteExercise(${ex.id})">Supprimer</button>
+                            </div>
+                        </div>
+                        <div class="card-back">
+                            <div class="exercise-details">
+                                <div class="detail-item">
+                                    <strong>Description :</strong><br>
+                                    ${ex.description || 'Aucune description'}
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Durée :</strong> ${ex.duree} minutes
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Matériel :</strong><br>
+                                    ${ex.materiel || 'Aucun matériel requis'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`
+            ).join('');
+        }
+
         // Chargement et affichage des exercices
         function loadExercises() {
             fetch('api_exercices.php')
                 .then(res => res.json())
                 .then(data => {
-                    const grid = document.getElementById('exercises');
                     if (data.error) {
-                        grid.innerHTML = `<div class="empty-state">${data.error}</div>`;
+                        document.getElementById('exercises').innerHTML = `<div class="empty-state">${data.error}</div>`;
                         return;
                     }
-                    grid.innerHTML = data.map(ex =>
-                        `<div class="exercise-card" onclick="this.classList.toggle('flipped')">
-                            <div class="card-inner">
-                                <div class="card-front">
-                                    <div class="exercise-title">${ex.nom}</div>
-                                    <div class="exercise-category">${ex.categorie}</div>
-                                    <div class="exercise-duration">${ex.duree} min</div>
-                                    <div class="card-actions">
-                                        <button class="btn btn-edit" onclick="event.stopPropagation();editExercise(${ex.id}, '${escapeQuotes(ex.nom)}', '${escapeQuotes(ex.categorie)}', '${escapeQuotes(ex.description)}', '${ex.duree}', '${escapeQuotes(ex.materiel)}')">Modifier</button>
-                                        <button class="btn btn-delete" onclick="event.stopPropagation();deleteExercise(${ex.id})">Supprimer</button>
-                                    </div>
-                                </div>
-                                <div class="card-back">
-                                    <div class="exercise-details">
-                                        <div class="detail-item">
-                                            <strong>Description :</strong><br>
-                                            ${ex.description || 'Aucune description'}
-                                        </div>
-                                        <div class="detail-item">
-                                            <strong>Durée :</strong> ${ex.duree} minutes
-                                        </div>
-                                        <div class="detail-item">
-                                            <strong>Matériel :</strong><br>
-                                            ${ex.materiel || 'Aucun matériel requis'}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>`
-                    ).join('');
+                    allExercises = data;
+                    displayExercises(allExercises);
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    document.getElementById('exercises').innerHTML = '<div class="empty-state">Erreur lors du chargement des exercices.</div>';
                 });
         }
 
