@@ -416,11 +416,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     <div class="filters">
         <button class="filter-btn active" data-category="Toutes">Toutes</button>
-        <button class="filter-btn" data-category="Échauffement">Échauffement</button>
+        <button class="filter-btn" data-category="Echauffement">Echauffement</button>
         <button class="filter-btn" data-category="Endurance">Endurance</button>
         <button class="filter-btn" data-category="Vitesse">Vitesse</button>
         <button class="filter-btn" data-category="Agilité">Agilité</button>
-        <button class="filter-btn" data-category="Précision">Précision</button>
     </div>
 
     <div class="main-container">
