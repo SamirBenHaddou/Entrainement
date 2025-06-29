@@ -103,7 +103,15 @@ if (!isset($_SESSION['user_id'])) {
                             <div class="exercise-category">${ex.categorie}</div>
                             <div class="exercise-duration">${ex.duree} min</div>
                             <div class="card-actions">
-                                <button class="btn btn-edit" onclick="event.stopPropagation();editExercise(${ex.id}, '${escapeQuotes(ex.nom)}', '${escapeQuotes(ex.categorie)}', '${escapeQuotes(ex.description)}', '${ex.duree}', '${escapeQuotes(ex.materiel)}')">Modifier</button>
+                                <button class="btn btn-edit"
+    data-id="${ex.id}"
+    data-nom="${escapeHtml(ex.nom)}"
+    data-categorie="${escapeHtml(ex.categorie)}"
+    data-description="${escapeHtml(ex.description)}"
+    data-duree="${escapeHtml(ex.duree)}"
+    data-materiel="${escapeHtml(ex.materiel)}"
+    onclick="event.stopPropagation();editExerciseFromBtn(this);"
+>Modifier</button>
                                 <button class="btn btn-delete" onclick="event.stopPropagation();deleteExercise(${ex.id})">Supprimer</button>
                             </div>
                         </div>
@@ -138,6 +146,7 @@ if (!isset($_SESSION['user_id'])) {
                     }
                     allExercises = data;
                     displayExercises(allExercises);
+                    console.log('Données reçues de l\'API :', data);
                 })
                 .catch(error => {
                     console.error('Erreur:', error);
@@ -218,12 +227,33 @@ if (!isset($_SESSION['user_id'])) {
             return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
 
+        // Échappement des caractères HTML
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+        }
+
         // Initialisation au chargement de la page
         document.addEventListener('DOMContentLoaded', function() {
             loadExercises();
             // Masquer le bouton annuler par défaut
             document.getElementById('ex-cancel').style.display = "none";
         });
+
+        function editExerciseFromBtn(btn) {
+            editExercise(
+                btn.getAttribute('data-id'),
+                btn.getAttribute('data-nom'),
+                btn.getAttribute('data-categorie'),
+                btn.getAttribute('data-description'),
+                btn.getAttribute('data-duree'),
+                btn.getAttribute('data-materiel')
+            );
+        }
     </script>
 </body>
 </html>
