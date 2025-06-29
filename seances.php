@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 // === 4. seances.php (Interface principale améliorée) ===
 session_start();
 if (!isset($_SESSION['user_id'])) {
@@ -73,10 +75,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $stmt = $pdo->prepare('INSERT INTO seance_exercices (seance_id, exercice_id) VALUES (?, ?)');
             $stmt->execute([$seance_id, $exercice_id]);
             echo json_encode(['success' => true]);
+            exit;
         } else {
             echo json_encode(['success' => false, 'message' => 'Exercice déjà ajouté']);
+            exit;
         }
-        exit;
     }
     
     if ($_POST['action'] === 'supprimer_exercice') {
@@ -526,7 +529,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                 body: `action=ajouter_exercice&exercice_id=${exerciceId}&date=${encodeURIComponent(currentDate)}`
             });
-            const result = await response.json();
+            const text = await response.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (e) {
+                alert("Erreur serveur :\n" + text);
+                return;
+            }
             if (result.success) {
                 await loadSelectedExercises();
                 renderExercises();
