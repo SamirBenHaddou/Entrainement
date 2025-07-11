@@ -111,317 +111,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planificateur d'Entraînement - <?= htmlspecialchars($date_seance) ?></title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            text-align: center;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 2rem;
-            margin: 0;
-        }
-
-        .home-btn {
-            background: #4ecdc4;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 25px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .home-btn:hover {
-            background: #45b7aa;
-            transform: translateY(-2px);
-        }
-
-        .date-selector {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .date-selector input {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 25px;
-            background: white;
-            font-size: 16px;
-            margin: 0 10px;
-        }
-
-        .filters {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 30px 0;
-            flex-wrap: wrap;
-        }
-
-        .filter-btn {
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 25px;
-            color: white;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 14px;
-        }
-
-        .filter-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .filter-btn.active {
-            background: #ff6b6b;
-            color: white;
-        }
-
-        .main-container {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 30px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .exercises-section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 25px;
-            border-radius: 15px;
-        }
-
-        .section-title {
-            color: white;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .exercises-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        .exercise-card {
-            perspective: 1000px;
-            height: 200px;
-            cursor: pointer;
-        }
-
-        .card-inner {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            text-align: center;
-            transition: transform 0.6s;
-            transform-style: preserve-3d;
-        }
-
-        .exercise-card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
-
-        .card-front, .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 15px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-front {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
-            color: #333;
-        }
-
-        .card-back {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-            transform: rotateY(180deg);
-            color: #333;
-        }
-
-        .exercise-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-
-        .exercise-category {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-bottom: 15px;
-        }
-
-        .add-btn {
-            background: #4ecdc4;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            margin-top: auto;
-        }
-
-        .add-btn:hover {
-            background: #45b7aa;
-            transform: translateY(-2px);
-        }
-
-        .add-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .exercise-details {
-            font-size: 0.9rem;
-            line-height: 1.4;
-            text-align: left;
-            overflow-y: auto;
-        }
-
-        .selected-section {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 25px;
-            border-radius: 15px;
-            height: fit-content;
-        }
-
-        .selected-exercises {
-            list-style: none;
-        }
-
-        .selected-exercise {
-            background: rgba(255, 255, 255, 0.2);
-            margin-bottom: 10px;
-            padding: 15px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: white;
-        }
-
-        .remove-btn {
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-
-        .remove-btn:hover {
-            background: #ff5252;
-            transform: scale(1.1);
-        }
-
-        .summary {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            color: white;
-        }
-
-        .loading {
-            text-align: center;
-            color: white;
-            padding: 20px;
-        }
-
-        @media (max-width: 768px) {
-            .main-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .exercises-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
-            
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .header {
-                flex-direction: column;
-                gap: 15px;
-            }
-        }
-
-        .duration-info {
-            font-size: 0.8rem;
-            margin: 5px 0;
-        }
-
-        .material-info {
-            font-size: 0.8rem;
-            color: #666;
-        }
-
-        .empty-state {
-            text-align: center;
-            color: white;
-            padding: 40px;
-            opacity: 0.7;
-        }
-    </style>
+     <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
     <div class="header">
-        <h1>🏃‍♂️ Planificateur d'Entraînement</h1>
-        <a href="home.php" class="home-btn">🏠 Accueil</a>
-    </div>
+  <h1>🏃‍♂️ Planificateur d'Entraînement</h1>
+  <a href="home.php" class="home-btn">🏠 Accueil</a>
+</div>
 
-    <div class="date-selector">
-        <label for="session-date" style="color: white; margin-right: 10px;">Date de la séance:</label>
-        <input type="date" id="session-date" value="<?= htmlspecialchars($date_seance) ?>">
-    </div>
+    <div class="date-selector centered">
+    <label for="session-date">Date de la séance :</label>
+    <input type="date" id="session-date" value="<?= htmlspecialchars($date_seance) ?>">
+</div>
 
     <div class="filters">
         <button class="filter-btn active" data-category="Toutes">Toutes</button>
@@ -502,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         <div class="card-front">
                             <div class="exercise-title">${exercise.nom}</div>
                             <div class="exercise-category">${exercise.categorie}</div>
-                            <button class="add-btn" ${isSelected ? 'disabled' : ''} onclick="addExercise(${exercise.id}); event.stopPropagation();">
+                            <button class="btn btn-add" ${isSelected ? 'disabled' : ''} onclick="addExercise(${exercise.id}); event.stopPropagation();">
                                 ${isSelected ? 'Ajouté' : 'Ajouter'}
                             </button>
                         </div>
@@ -573,14 +274,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 return;
             }
             ul.innerHTML = selectedExercises.map(ex =>
-                `<li class="selected-exercise">
-                    <span>
-                        <strong>${ex.nom}</strong>
-                        <span style="font-size:0.9em;opacity:0.7;"> (${ex.categorie})</span>
-                    </span>
-                    <button class="remove-btn" title="Retirer" onclick="removeExercise(${ex.id}); event.stopPropagation();">&times;</button>
-                </li>`
-            ).join('');
+    `<li class="selected-exercise">
+        <span>
+            <strong>${ex.nom}</strong>
+            <span class="selected-category"> (${ex.categorie})</span>
+        </span>
+        <button class="btn btn-delete remove-btn" title="Retirer" onclick="removeExercise(${ex.id}); event.stopPropagation();">&times;</button>
+    </li>`
+).join('');
         }
 
         // Mise à jour du résumé

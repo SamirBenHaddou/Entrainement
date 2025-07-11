@@ -1,4 +1,4 @@
-/* Style général et index.php */
+/* Style général */
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
@@ -8,11 +8,11 @@ body {
   color: #222;
 }
 
-/* Styles pour index.php */
+/* Centrage du formulaire sur index.php */
 .container {
   max-width: 400px;
   width: 100%;
-  margin: 40px auto; /* centre horizontalement */
+  margin: 40px auto;
   padding: 2em;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -21,7 +21,7 @@ body {
   color: white;
   display: flex;
   flex-direction: column;
-  align-items: center; /* centre le contenu verticalement dans le container */
+  align-items: center;
 }
 
 h2 {
@@ -104,7 +104,7 @@ button[type="submit"]:hover {
   text-align: center;
 }
 
-/* === HEADER MODERNE === */
+/* Entête uniforme pour toutes les pages */
 .header {
   display: flex;
   align-items: center;
@@ -253,44 +253,25 @@ button[type="submit"]:hover {
 .btn-add {
   background: #4ecdc4;
   color: white;
-  flex: 1;
 }
 
-.btn-add:hover {
-  background: #45b7aa;
-  transform: translateY(-2px);
+.btn-add:disabled {
+  background: #b2dfdb;
+  color: #eee;
+  cursor: not-allowed;
 }
 
-.btn-cancel {
-  background: #ff6b6b;
-  color: white;
-  flex: 1;
-}
-
-.btn-cancel:hover {
-  background: #ff5252;
-  transform: translateY(-2px);
-}
-
-.btn-edit {
-  background: #ffd166;
-  color: #333;
-  padding: 8px 16px;
-  font-size: 12px;
-}
-
-.btn-edit:hover {
-  background: #fcb900;
-}
-
-.btn-delete {
+.btn-delete,
+.remove-btn {
   background: #ff6b6b;
   color: white;
   padding: 8px 16px;
-  font-size: 12px;
+  font-size: 1em;
+  border-radius: 25px;
 }
 
-.btn-delete:hover {
+.btn-delete:hover,
+.remove-btn:hover {
   background: #e63946;
 }
 
@@ -449,14 +430,7 @@ button[type="submit"]:hover {
 }
 
 /* === ÉTATS D'AFFICHAGE === */
-.loading {
-  text-align: center;
-  color: white;
-  padding: 40px;
-  opacity: 0.7;
-  grid-column: 1 / -1;
-}
-
+.loading,
 .empty-state {
   text-align: center;
   color: white;
@@ -620,18 +594,6 @@ button[type="submit"]:hover {
 }
 
 /* Styles pour home.php */
-.header {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-radius: 15px;
-  margin-bottom: 30px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: white;
-}
-
 .welcome {
   font-size: 1.2rem;
 }
@@ -686,7 +648,7 @@ button[type="submit"]:hover {
   margin: 0;
   word-break: break-word;
   overflow-wrap: break-word;
-  max-height: 4.5em; /* Limite à 3 lignes environ */
+  max-height: 4.5em;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -701,46 +663,47 @@ button[type="submit"]:hover {
   margin-bottom: 15px;
 }
 
-.card p {
-  opacity: 0.8;
-  line-height: 1.5;
-}
-
 .icon {
   font-size: 3rem;
   margin-bottom: 20px;
   display: block;
 }
 
-/* Entête uniforme pour toutes les pages */
-.header {
+/* Nouvelle règle suggérée */
+.selected-category {
+  font-size: 0.9em;
+  opacity: 0.7;
+}
+
+.date-selector.centered {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 1em 2em;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  margin-bottom: 2em;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-  color: white;
+  justify-content: center;
+  margin: 30px 0 30px 0;
 }
 
-.header h1 {
-  font-size: 2rem;
-  margin: 0;
+.date-selector label {
   color: white;
+  font-size: 1.2em;
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
 }
 
-/* Responsive : titre et bouton restent sur la même ligne */
-@media (max-width: 600px) {
-  .header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 1em;
-  }
-  .header h1 {
-    font-size: 1.3rem;
-    text-align: center;
-  }
+.date-selector input[type="date"] {
+  padding: 12px 18px;
+  border-radius: 25px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #222;
+  font-size: 1.1em;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  outline: none;
+  transition: background 0.2s;
+}
+
+.date-selector input[type="date"]:focus {
+  background: rgba(255, 255, 255, 0.25);
 }
