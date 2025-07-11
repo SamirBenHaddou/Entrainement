@@ -114,6 +114,7 @@ button[type="submit"]:hover {
   border-radius: 12px;
   margin-bottom: 2em;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  color: white;
 }
 
 .header h1 {
@@ -616,4 +617,130 @@ button[type="submit"]:hover {
 
 .selection-list button:hover {
   color: #a71d2a;
+}
+
+/* Styles pour home.php */
+.header {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 15px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.welcome {
+  font-size: 1.2rem;
+}
+
+.btn-logout {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+  background: #ff5252;
+  transform: translateY(-2px);
+}
+
+.dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+  align-items: stretch;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 30px;
+  border-radius: 15px;
+  text-align: center;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-sizing: border-box;
+  min-width: 0;
+  word-break: break-word;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.card p {
+  opacity: 0.8;
+  line-height: 1.5;
+  margin: 0;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-height: 4.5em; /* Limite à 3 lignes environ */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-5px);
+}
+
+.card h3 {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.card p {
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+  display: block;
+}
+
+/* Entête uniforme pour toutes les pages */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1em 2em;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-bottom: 2em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  color: white;
+}
+
+.header h1 {
+  font-size: 2rem;
+  margin: 0;
+  color: white;
+}
+
+/* Responsive : titre et bouton restent sur la même ligne */
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 1em;
+  }
+  .header h1 {
+    font-size: 1.3rem;
+    text-align: center;
+  }
 }
