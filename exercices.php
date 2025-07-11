@@ -15,9 +15,9 @@ if (!isset($_SESSION['user_id'])) {
 </head>
 <body>
     <div class="header">
-        <h1>🏋️‍♂️ Gestion des Exercices</h1>
-        <a href="home.php" class="home-btn">🏠 Accueil</a>
-    </div>
+  <h1>🏋️‍♂️ Gestion des Exercices</h1>
+  <a href="home.php" class="home-btn">🏠 Accueil</a>
+</div>
 
     <div class="main-container">
         <div class="form-section">

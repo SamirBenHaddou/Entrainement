@@ -65,109 +65,13 @@ if (isset($_SESSION['user_id'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connexion / Inscription - Entrainement</title>
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 400px;
-      width: 100%;
-      padding: 2em;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      color: white;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 1.5em;
-      font-size: 2rem;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 0.5em;
-      font-weight: 500;
-    }
-
-    input[type="email"], input[type="password"] {
-      width: 100%;
-      padding: 12px 15px;
-      margin-bottom: 1em;
-      border: none;
-      border-radius: 25px;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      font-size: 16px;
-    }
-
-    input[type="email"]::placeholder, input[type="password"]::placeholder {
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    button[type="submit"] {
-      width: 100%;
-      padding: 12px;
-      background: #ff6b6b;
-      color: white;
-      border: none;
-      border-radius: 25px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-bottom: 1em;
-    }
-
-    button[type="submit"]:hover {
-      background: #ff5252;
-      transform: translateY(-2px);
-    }
-
-    .switch-link {
-      color: #ffd93d;
-      cursor: pointer;
-      text-decoration: underline;
-      transition: color 0.3s ease;
-    }
-
-    .switch-link:hover {
-      color: #ffed4e;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .error {
-      color: #ff6b6b;
-      background: rgba(255, 107, 107, 0.1);
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 1em;
-      text-align: center;
-    }
-
-    .success {
-      color: #4ecdc4;
-      background: rgba(78, 205, 196, 0.1);
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 1em;
-      text-align: center;
-    }
-  </style>
-</head>
+  </head>
 <body>
+
+  <div class="header">
+    <h1>Connexion / Inscription</h1>
+    <a href="home.php" class="home-btn">🏠 Accueil</a>
+  </div>
 
   <div class="container">
     <h2 id="form-title">🏃‍♂️ Connexion</h2>

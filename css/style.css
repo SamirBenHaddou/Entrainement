@@ -1,4 +1,4 @@
-/* Style général */
+/* Style général et index.php */
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
@@ -8,39 +8,152 @@ body {
   color: #222;
 }
 
-/* === HEADER MODERNE === */
-.header {
+/* Styles pour index.php */
+.container {
+  max-width: 400px;
+  width: 100%;
+  padding: 2em;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  padding: 20px;
   border-radius: 15px;
-  margin-bottom: 30px;
-  text-align: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   color: white;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 1.5em;
+  font-size: 2rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5em;
+  font-weight: 500;
+}
+
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px 15px;
+  margin-bottom: 1em;
+  border: none;
+  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 16px;
+}
+
+input[type="email"]::placeholder,
+input[type="password"]::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+button[type="submit"] {
+  width: 100%;
+  padding: 12px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 1em;
+}
+
+button[type="submit"]:hover {
+  background: #ff5252;
+  transform: translateY(-2px);
+}
+
+.switch-link {
+  color: #ffd93d;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.3s ease;
+}
+
+.switch-link:hover {
+  color: #ffed4e;
+}
+
+.hidden {
+  display: none;
+}
+
+.error {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 1em;
+  text-align: center;
+}
+
+.success {
+  color: #4ecdc4;
+  background: rgba(78, 205, 196, 0.1);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 1em;
+  text-align: center;
+}
+
+/* === HEADER MODERNE === */
+.header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  padding: 1em 2em;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  margin-bottom: 2em;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
 
 .header h1 {
   font-size: 2rem;
   margin: 0;
+  color: white;
 }
 
 .home-btn {
-  background: #4ecdc4;
+  background: #ff6b6b;
   color: white;
-  border: none;
-  padding: 10px 20px;
+  padding: 0.6em 1.2em;
   border-radius: 25px;
   text-decoration: none;
-  transition: all 0.3s ease;
-  font-weight: 600;
+  font-weight: bold;
+  font-size: 1.1em;
+  transition: background 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+  border: none;
+  outline: none;
+  cursor: pointer;
 }
 
 .home-btn:hover {
-  background: #45b7aa;
-  transform: translateY(-2px);
+  background: #ff5252;
+}
+
+/* Responsive : titre et bouton restent sur la même ligne */
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 1em;
+  }
+  .header h1 {
+    font-size: 1.3rem;
+    text-align: center;
+  }
+  .home-btn {
+    align-self: center;
+    font-size: 1em;
+    padding: 0.5em 1em;
+  }
 }
 
 /* === LAYOUT PRINCIPAL === */
@@ -373,6 +486,20 @@ body {
 
   .form-buttons {
     flex-direction: column;
+  }
+}
+
+/* Responsive header : titre toujours en haut */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0;
+  }
+  .header h1 {
+    font-size: 1.2rem;
+    margin: 0;
   }
 }
 
