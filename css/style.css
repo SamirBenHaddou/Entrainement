@@ -12,12 +12,16 @@ body {
 .container {
   max-width: 400px;
   width: 100%;
+  margin: 40px auto; /* centre horizontalement */
   padding: 2em;
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   border-radius: 15px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* centre le contenu verticalement dans le container */
 }
 
 h2 {
