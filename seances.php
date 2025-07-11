@@ -32,12 +32,12 @@ if (isset($_GET['api'])) {
     
     if ($_GET['api'] === 'seance' && isset($_GET['date'])) {
         $stmt = $pdo->prepare('
-            SELECT e.*, se.id as seance_exercice_id
+            SELECT e.*, se.id as seance_exercice_id, se.ordre
             FROM exercices e
             JOIN seance_exercices se ON e.id = se.exercice_id
             JOIN seances s ON se.seance_id = s.id
             WHERE s.date_seance = ? AND s.user_id = ?
-            ORDER BY e.nom
+            ORDER BY se.ordre ASC
         ');
         $stmt->execute([$_GET['date'], $user_id]);
         $exercices = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -53,12 +53,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'ajouter_exercice') {
         $exercice_id = intval($_POST['exercice_id']);
         $date = $_POST['date'];
-        
+
         // Créer ou récupérer la séance
         $stmt = $pdo->prepare('SELECT id FROM seances WHERE date_seance = ? AND user_id = ?');
         $stmt->execute([$date, $user_id]);
         $seance = $stmt->fetch();
-        
+
         if (!$seance) {
             $stmt = $pdo->prepare('INSERT INTO seances (date_seance, user_id) VALUES (?, ?)');
             $stmt->execute([$date, $user_id]);
@@ -66,14 +66,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             $seance_id = $seance['id'];
         }
-        
+
         // Vérifier si l'exercice n'est pas déjà ajouté
         $stmt = $pdo->prepare('SELECT 1 FROM seance_exercices WHERE seance_id = ? AND exercice_id = ?');
         $stmt->execute([$seance_id, $exercice_id]);
-        
+
         if (!$stmt->fetch()) {
-            $stmt = $pdo->prepare('INSERT INTO seance_exercices (seance_id, exercice_id) VALUES (?, ?)');
-            $stmt->execute([$seance_id, $exercice_id]);
+            // Trouver le prochain ordre
+            $stmt = $pdo->prepare('SELECT MAX(ordre) AS max_ordre FROM seance_exercices WHERE seance_id = ?');
+            $stmt->execute([$seance_id]);
+            $maxOrdre = $stmt->fetchColumn();
+            $ordre = $maxOrdre !== false ? intval($maxOrdre) + 1 : 1;
+
+            $stmt = $pdo->prepare('INSERT INTO seance_exercices (seance_id, exercice_id, ordre) VALUES (?, ?, ?)');
+            $stmt->execute([$seance_id, $exercice_id, $ordre]);
             echo json_encode(['success' => true]);
             exit;
         } else {
