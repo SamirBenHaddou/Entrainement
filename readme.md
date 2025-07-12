@@ -1,4 +1,4 @@
 correction bug
 
-remettre tous le js au même endroit
+bug dans seance planifiée la carte ne se retourne pas
 dans gérer les exercices sur téléphones, les cartes se superposent
