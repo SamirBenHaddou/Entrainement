@@ -295,17 +295,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </li>`
             ).join('');
 
-            // Ajoute le flip au clic sur les cartes sélectionnées
-            document.querySelectorAll('.selected-exercise-card .exercise-card').forEach(card => {
-                card.addEventListener('click', function(e) {
-                    // Vérifier si le clic vient du bouton de suppression
-                    if (e.target.classList.contains('remove-btn') || e.target.classList.contains('btn-delete')) {
-                        return; // Ne pas déclencher le flip
-                    }
-                    this.classList.toggle('flipped');
-                });
-            });
+            // Ne pas ajouter d'écouteurs ici, gestion dans le parent
         }
+
+        // À placer UNE SEULE FOIS après la définition de renderSelectedExercises (hors de la fonction)
+        document.getElementById('selected-exercises').addEventListener('click', function(e) {
+            const card = e.target.closest('.exercise-card');
+            if (!card) return;
+            // Ne pas flipper si clic sur le bouton retirer
+            if (e.target.classList.contains('remove-btn') || e.target.classList.contains('btn-delete')) return;
+            card.classList.toggle('flipped');
+        });
 
         // Mise à jour du résumé
         function updateSummary() {
