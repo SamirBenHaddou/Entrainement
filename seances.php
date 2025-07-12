@@ -275,34 +275,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 return;
             }
             ul.innerHTML = selectedExercises.map(ex =>
-        `<li class="selected-exercise-card">
-            <div class="exercise-card" data-id="${ex.id}">
-                <div class="card-inner">
-                    <div class="card-front">
-                        <div class="exercise-title">${ex.nom}</div>
-                        <div class="exercise-category">${ex.categorie}</div>
-                        <button class="btn btn-delete remove-btn" title="Retirer" onclick="removeExercise(${ex.id}); event.stopPropagation();">&times;</button>
-                    </div>
-                    <div class="card-back">
-                        <div class="exercise-details">
-                            <strong>Description :</strong> ${ex.description || '—'}<br>
-                            <span class="duration-info"><strong>Durée :</strong> ${ex.duree || '—'} min</span><br>
-                            <span class="material-info"><strong>Matériel :</strong> ${ex.materiel || '—'}</span>
+                `<li class="selected-exercise-card">
+                    <div class="exercise-card" data-id="${ex.id}">
+                        <div class="card-inner">
+                            <div class="card-front">
+                                <div class="exercise-title">${ex.nom}</div>
+                                <div class="exercise-category">${ex.categorie}</div>
+                                <button class="btn btn-delete remove-btn" title="Retirer" onclick="removeExercise(${ex.id}); event.stopPropagation();">&times;</button>
+                            </div>
+                            <div class="card-back">
+                                <div class="exercise-details">
+                                    <strong>Description :</strong> ${ex.description || '—'}<br>
+                                    <span class="duration-info"><strong>Durée :</strong> ${ex.duree || '—'} min</span><br>
+                                    <span class="material-info"><strong>Matériel :</strong> ${ex.materiel || '—'}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </li>`
-    ).join('');
+                </li>`
+            ).join('');
 
-    // Ajoute le flip au clic sur la carte sélectionnée
-    document.querySelectorAll('.selected-exercise-card .exercise-card').forEach(card => {
-        card.addEventListener('click', function(e) {
-            if (!e.target.classList.contains('remove-btn')) {
-                this.classList.toggle('flipped');
-            }
-        });
-    });
+            // Ajoute le flip au clic sur les cartes sélectionnées
+            document.querySelectorAll('.selected-exercise-card .exercise-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    // Vérifier si le clic vient du bouton de suppression
+                    if (e.target.classList.contains('remove-btn') || e.target.classList.contains('btn-delete')) {
+                        return; // Ne pas déclencher le flip
+                    }
+                    this.classList.toggle('flipped');
+                });
+            });
         }
 
         // Mise à jour du résumé
