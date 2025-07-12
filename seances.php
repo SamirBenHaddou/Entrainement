@@ -186,9 +186,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         function renderExercises() {
             const grid = document.getElementById('exercises-grid');
+            // Filtrer pour ne pas afficher les exercices déjà sélectionnés
             const filteredExercises = currentFilter === 'Toutes' 
-                ? allExercises 
-                : allExercises.filter(ex => ex.categorie === currentFilter);
+                ? allExercises.filter(ex => !selectedExercises.some(sel => sel.id == ex.id))
+                : allExercises.filter(ex => ex.categorie === currentFilter && !selectedExercises.some(sel => sel.id == ex.id));
 
             if (filteredExercises.length === 0) {
                 grid.innerHTML = '<div class="empty-state">Aucun exercice trouvé pour cette catégorie</div>';
@@ -196,15 +197,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
 
             grid.innerHTML = filteredExercises.map(exercise => {
-                const isSelected = selectedExercises.some(sel => sel.id == exercise.id);
                 return `
-                <div class="exercise-card${isSelected ? ' selected' : ''}" data-id="${exercise.id}">
+                <div class="exercise-card" data-id="${exercise.id}">
                     <div class="card-inner">
                         <div class="card-front">
                             <div class="exercise-title">${exercise.nom}</div>
                             <div class="exercise-category">${exercise.categorie}</div>
-                            <button class="btn btn-add" ${isSelected ? 'disabled' : ''} onclick="addExercise(${exercise.id}); event.stopPropagation();">
-                                ${isSelected ? 'Ajouté' : 'Ajouter'}
+                            <button class="btn btn-add" onclick="addExercise(${exercise.id}); event.stopPropagation();">
+                                Ajouter
                             </button>
                         </div>
                         <div class="card-back">
@@ -222,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             // Ajoute le flip au clic sur la carte
             document.querySelectorAll('.exercise-card').forEach(card => {
                 card.addEventListener('click', function(e) {
-                    if (!e.target.classList.contains('add-btn')) {
+                    if (!e.target.classList.contains('btn-add')) {
                         this.classList.toggle('flipped');
                     }
                 });
@@ -246,6 +246,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             }
             if (result.success) {
                 await loadSelectedExercises();
+                // Recharge la liste des exercices disponibles pour masquer la carte ajoutée
                 renderExercises();
             } else {
                 alert(result.message || "Erreur lors de l'ajout.");
@@ -274,14 +275,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 return;
             }
             ul.innerHTML = selectedExercises.map(ex =>
-    `<li class="selected-exercise">
-        <span>
-            <strong>${ex.nom}</strong>
-            <span class="selected-category"> (${ex.categorie})</span>
-        </span>
-        <button class="btn btn-delete remove-btn" title="Retirer" onclick="removeExercise(${ex.id}); event.stopPropagation();">&times;</button>
-    </li>`
-).join('');
+        `<li class="selected-exercise-card">
+            <div class="exercise-card" data-id="${ex.id}">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <div class="exercise-title">${ex.nom}</div>
+                        <div class="exercise-category">${ex.categorie}</div>
+                        <button class="btn btn-delete remove-btn" title="Retirer" onclick="removeExercise(${ex.id}); event.stopPropagation();">&times;</button>
+                    </div>
+                    <div class="card-back">
+                        <div class="exercise-details">
+                            <strong>Description :</strong> ${ex.description || '—'}<br>
+                            <span class="duration-info"><strong>Durée :</strong> ${ex.duree || '—'} min</span><br>
+                            <span class="material-info"><strong>Matériel :</strong> ${ex.materiel || '—'}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </li>`
+    ).join('');
+
+    // Ajoute le flip au clic sur la carte sélectionnée
+    document.querySelectorAll('.selected-exercise-card .exercise-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('remove-btn')) {
+                this.classList.toggle('flipped');
+            }
+        });
+    });
         }
 
         // Mise à jour du résumé

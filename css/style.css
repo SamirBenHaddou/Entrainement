@@ -707,3 +707,17 @@ button[type="submit"]:hover {
 .date-selector input[type="date"]:focus {
   background: rgba(255, 255, 255, 0.25);
 }
+
+.selected-exercises {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.selected-exercise-card {
+  margin: 0;
+  padding: 0;
+}
