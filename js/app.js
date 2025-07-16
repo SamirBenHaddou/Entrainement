@@ -155,6 +155,7 @@
     if (result.success) {
       await loadSelectedExercises();
       renderExercises();
+      updateSummary();
     } else {
       alert(result.message || "Erreur lors de l'ajout.");
     }
@@ -173,13 +174,12 @@
     if (result.success) {
       await loadSelectedExercises();
       renderExercises();
+      updateSummary();
     }
   }
 
   // Mise à jour du résumé
   function updateSummary() {
-    document.getElementById("exercise-count").textContent =
-      selectedExercises.length;
     const total = selectedExercises.reduce(
       (sum, ex) => sum + (parseInt(ex.duree) || 0),
       0
@@ -243,6 +243,16 @@
     // Récupère la date de la séance
     const dateSeance = document.getElementById("session-date").value;
 
+    // Calcule la durée totale
+    let totalDuration = 0;
+    items.forEach((card) => {
+      const duree = card.querySelector(".card-back .duration-info");
+      if (duree) {
+        const match = duree.textContent.match(/(\d+)/);
+        if (match) totalDuration += parseInt(match[1]);
+      }
+    });
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.text("Séance Planifiée", 10, 15);
@@ -250,8 +260,9 @@
     doc.setFontSize(14);
     doc.setFont("helvetica", "normal");
     doc.text(`Date : ${dateSeance}`, 10, 25);
+    doc.text(`Durée totale : ${totalDuration} min`, 10, 32);
 
-    let y = 35;
+    let y = 42;
     items.forEach((card, idx) => {
       const title = card.querySelector(".exercise-title").textContent.trim();
       const desc = card
@@ -265,9 +276,13 @@
       y += 8;
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
-      doc.text(desc, 12, y, { maxWidth: 180 });
 
-      y += 20;
+      // Découpe le descriptif en lignes pour éviter la superposition
+      const descLines = doc.splitTextToSize(desc, 180);
+      doc.text(descLines, 12, y);
+
+      y += descLines.length * 7 + 8; // 7px par ligne + espace après chaque exercice
+
       if (y > 270) {
         doc.addPage();
         y = 20;

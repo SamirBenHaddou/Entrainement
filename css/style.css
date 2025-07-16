@@ -1,4 +1,4 @@
-/* Style général */
+/* === STYLE GENERAL === */
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
@@ -8,7 +8,7 @@ body {
   color: #222;
 }
 
-/* Centrage du formulaire sur index.php */
+/* Centrage du formulaire */
 .container {
   max-width: 400px;
   width: 100%;
@@ -104,7 +104,7 @@ button[type="submit"]:hover {
   text-align: center;
 }
 
-/* Entête uniforme pour toutes les pages */
+/* === HEADER === */
 .header {
   display: flex;
   align-items: center;
@@ -142,7 +142,7 @@ button[type="submit"]:hover {
   background: #ff5252;
 }
 
-/* Responsive : titre et bouton restent sur la même ligne */
+/* Responsive header */
 @media (max-width: 600px) {
   .header {
     flex-direction: column;
@@ -170,15 +170,14 @@ button[type="submit"]:hover {
   gap: 30px;
 }
 
-/* === SECTION FORMULAIRE === */
-.form-section {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 25px;
-  border-radius: 15px;
-  height: fit-content;
+@media (max-width: 768px) {
+  .main-container {
+    grid-template-columns: 1fr;
+  }
 }
 
+/* === SECTION FORMULAIRE === */
+.form-section,
 .exercises-section {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
@@ -238,6 +237,12 @@ button[type="submit"]:hover {
   margin-top: 10px;
 }
 
+@media (max-width: 768px) {
+  .form-buttons {
+    flex-direction: column;
+  }
+}
+
 /* === BOUTONS === */
 .btn {
   padding: 12px 24px;
@@ -248,6 +253,8 @@ button[type="submit"]:hover {
   font-weight: 600;
   transition: all 0.3s ease;
   text-align: center;
+  min-width: 120px;
+  margin: 0 5px;
 }
 
 .btn-add {
@@ -273,6 +280,15 @@ button[type="submit"]:hover {
 .btn-delete:hover,
 .remove-btn:hover {
   background: #e63946;
+}
+
+.btn-edit {
+  background: #ffd166;
+  color: #333;
+}
+
+.btn-edit:hover {
+  background: #fcb900;
 }
 
 /* === FILTRES === */
@@ -313,12 +329,6 @@ button[type="submit"]:hover {
   margin-top: 20px;
 }
 
-.exercises-grid .exercise-card {
-  flex: 0 0 calc(50% - 10px);
-  min-width: 280px;
-}
-
-/* === CARTES EXERCICES === */
 .exercise-card {
   width: 320px;
   height: 220px;
@@ -329,6 +339,10 @@ button[type="submit"]:hover {
   margin: 0;
   position: relative;
   cursor: pointer;
+  box-sizing: border-box;
+  flex: 0 0 calc(50% - 10px);
+  min-width: 280px;
+  max-width: 100%;
 }
 
 .card-inner {
@@ -358,6 +372,10 @@ button[type="submit"]:hover {
   justify-content: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 25px;
+  word-break: break-word;
+  width: 100%;
+  box-sizing: border-box;
+  height: 100%;
 }
 
 .card-front {
@@ -370,6 +388,30 @@ button[type="submit"]:hover {
   text-align: center;
 }
 
+/* Responsive : affichage en colonne sur mobile */
+@media (max-width: 900px) {
+  .exercises-grid {
+    flex-direction: column;
+    gap: 20px;
+  }
+  .exercise-card {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+    min-height: 220px !important; /* Hauteur minimale pour le flip */
+    height: auto !important;
+  }
+  .card-front,
+  .card-back {
+    padding: 15px;
+    min-height: 220px !important;
+    height: 100% !important;
+    overflow-y: auto; /* Ajoute une barre de scroll si besoin */
+  }
+}
+
+/* TITRES ET DETAILS */
 .exercise-title {
   font-size: 1.4rem;
   font-weight: bold;
@@ -389,44 +431,35 @@ button[type="submit"]:hover {
   display: inline-block;
 }
 
-.card-actions {
-  margin-top: 18px;
-  display: flex;
-  gap: 10px;
-}
-
-.btn {
-  border: none;
-  border-radius: 20px;
-  padding: 8px 22px;
-  cursor: pointer;
-  font-size: 1em;
-  transition: background 0.2s;
-}
-
-.btn-edit {
-  background: #ffd166;
-  color: #333;
-}
-
-.btn-edit:hover {
-  background: #fcb900;
-}
-
-.btn-delete {
-  background: #ff6b6b;
-  color: white;
-}
-
-.btn-delete:hover {
-  background: #e63946;
-}
-
 .exercise-details {
   font-size: 1rem;
   line-height: 1.5;
   color: #22223b;
   text-align: left;
+  width: 100%;
+}
+
+/* Actions des cartes : boutons en colonne sur mobile */
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+@media (max-width: 900px) {
+  .card-actions {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .btn {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    margin: 5px 0;
+  }
 }
 
 /* === ÉTATS D'AFFICHAGE === */
@@ -439,158 +472,83 @@ button[type="submit"]:hover {
   grid-column: 1 / -1;
 }
 
-/* === RESPONSIVE === */
+/* === AUTRES RESPONSIVE === */
 @media (max-width: 768px) {
-  .main-container {
-    grid-template-columns: 1fr;
-  }
-
-  .exercises-grid {
-    flex-direction: column;
-  }
-
   .exercises-grid .exercise-card {
     flex: 1 1 100%;
     min-width: 250px;
   }
-
   .header h1 {
     font-size: 1.5rem;
   }
-
   .header {
     flex-direction: column;
     gap: 15px;
   }
-
-  .form-buttons {
-    flex-direction: column;
-  }
 }
 
-/* Responsive header : titre toujours en haut */
-@media (max-width: 768px) {
-  .header {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0;
-  }
-  .header h1 {
-    font-size: 1.2rem;
-    margin: 0;
-  }
+/* === DATE SELECTOR === */
+.date-selector.centered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 30px 0 30px 0;
 }
 
-/* Formulaire date */
-.form-date {
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.form-date label {
+.date-selector label {
+  color: white;
+  font-size: 1.2em;
   font-weight: 600;
-  margin-right: 0.5rem;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
 }
 
-/* Filtres catégories */
-.filters {
-  text-align: center;
-  margin-bottom: 1.5rem;
+.date-selector input[type="date"] {
+  padding: 12px 18px;
+  border-radius: 25px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #222;
+  font-size: 1.1em;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  outline: none;
+  transition: background 0.2s;
 }
 
-.filters a {
-  display: inline-block;
-  margin: 0 0.5rem 0.5rem 0.5rem;
-  padding: 0.4rem 1rem;
-  border: 1px solid #007bff;
-  border-radius: 20px;
-  color: #007bff;
-  font-weight: 600;
-  text-decoration: none;
-  transition: background-color 0.3s ease, color 0.3s ease;
+.date-selector input[type="date"]:focus {
+  background: rgba(255, 255, 255, 0.25);
 }
 
-.filters a:hover,
-.filters a.active {
-  background-color: #007bff;
-  color: #fff;
-}
-
-/* Container cartes */
-.cards-container {
+/* === LISTE EXERCICES SÉLECTIONNÉS === */
+.selected-exercises {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-/* Carte interactive */
-.card {
-  width: 250px;
-  height: 150px;
-  perspective: 800px;
-  cursor: pointer;
-  position: relative;
-  user-select: none;
-  outline: none;
-}
-
-/* Formulaires dans cartes */
-.form-ajout-exercice,
-.form-supprimer-exercice {
-  margin-top: 10px;
-}
-
-.form-ajout-exercice button,
-.form-supprimer-exercice button {
-  padding: 0.3rem 0.6rem;
-  font-size: 1em;
-  font-weight: 600;
-  color: #fff;
-  background-color: #007bff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.form-ajout-exercice button:hover,
-.form-supprimer-exercice button:hover {
-  background-color: #0056b3;
-}
-
-/* Liste des exercices sélectionnés */
-.selection-list {
-  max-width: 700px;
-  margin: 0 auto 2rem auto;
-  padding: 0;
+  gap: 20px;
   list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
-.selection-list li {
-  background: #f0f5ff;
-  padding: 8px 15px;
-  margin-bottom: 8px;
-  border-radius: 5px;
-  font-weight: 600;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.selected-exercise-card {
+  margin: 0;
+  padding: 0;
+  flex: 0 0 auto;
+  width: 320px;
+  /* Pour que la carte soit horizontale comme les autres */
 }
 
-.selection-list button {
-  background: none;
-  border: none;
-  color: #dc3545;
-  font-size: 1.4em;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.selection-list button:hover {
-  color: #a71d2a;
+@media (max-width: 900px) {
+  .selected-exercises {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .selected-exercise-card {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
 }
 
 /* Styles pour home.php */
@@ -669,55 +627,8 @@ button[type="submit"]:hover {
   display: block;
 }
 
-/* Nouvelle règle suggérée */
+/* Catégorie sélectionnée */
 .selected-category {
   font-size: 0.9em;
   opacity: 0.7;
-}
-
-.date-selector.centered {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 30px 0 30px 0;
-}
-
-.date-selector label {
-  color: white;
-  font-size: 1.2em;
-  font-weight: 600;
-  margin-bottom: 10px;
-  letter-spacing: 1px;
-}
-
-.date-selector input[type="date"] {
-  padding: 12px 18px;
-  border-radius: 25px;
-  border: none;
-  background: rgba(255, 255, 255, 0.15);
-  color: #222;
-  font-size: 1.1em;
-  font-weight: 500;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  outline: none;
-  transition: background 0.2s;
-}
-
-.date-selector input[type="date"]:focus {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.selected-exercises {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.selected-exercise-card {
-  margin: 0;
-  padding: 0;
 }

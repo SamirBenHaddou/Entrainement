@@ -142,8 +142,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
         <div class="selected-section">
             <div class="summary">
-                Durée totale estimée: <span id="total-duration">0</span> min
-            </div>
+  Durée totale estimée: <span id="total-duration">0</span> min
+</div>
             <ul class="selected-exercises" id="selected-exercises">
                 <!-- Les exercices sélectionnés apparaîtront ici -->
             </ul>

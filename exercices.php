@@ -60,7 +60,9 @@ if (!isset($_SESSION['user_id'])) {
             </div>
             
             <div class="exercises-grid" id="exercises">
-                <div class="loading">Chargement des exercices...</div>
+                <div class="exercise-card">...</div>
+                <div class="exercise-card">...</div>
+                <!-- etc. -->
             </div>
         </div>
     </div>
@@ -103,16 +105,15 @@ if (!isset($_SESSION['user_id'])) {
                             <div class="exercise-category">${ex.categorie}</div>
                             <div class="exercise-duration">${ex.duree} min</div>
                             <div class="card-actions">
-                                <button class="btn btn-edit"
-    data-id="${ex.id}"
-    data-nom="${escapeHtml(ex.nom)}"
-    data-categorie="${escapeHtml(ex.categorie)}"
-    data-description="${escapeHtml(ex.description)}"
-    data-duree="${escapeHtml(ex.duree)}"
-    data-materiel="${escapeHtml(ex.materiel)}"
-    onclick="event.stopPropagation();editExerciseFromBtn(this);"
->Modifier</button>
-                                <button class="btn btn-delete" onclick="event.stopPropagation();deleteExercise(${ex.id})">Supprimer</button>
+                                <button class="btn btn-edit" onclick="editExerciseFromBtn(this)" 
+                                    data-id="${ex.id}"
+                                    data-nom="${escapeQuotes(ex.nom)}"
+                                    data-categorie="${escapeQuotes(ex.categorie)}"
+                                    data-description="${escapeQuotes(ex.description)}"
+                                    data-duree="${escapeQuotes(ex.duree)}"
+                                    data-materiel="${escapeQuotes(ex.materiel)}"
+                                >Modifier</button>
+                                <button class="btn btn-delete" onclick="deleteExercise('${ex.id}')">Supprimer</button>
                             </div>
                         </div>
                         <div class="card-back">
