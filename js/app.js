@@ -227,4 +227,53 @@
 
   // Initialisation
   loadExercises().then(loadSelectedExercises);
+
+  document.getElementById("export-pdf").addEventListener("click", function () {
+    let items = document.querySelectorAll(
+      ".selected-exercise-card .exercise-card"
+    );
+    if (items.length === 0) {
+      alert("Aucun exercice à exporter !");
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Récupère la date de la séance
+    const dateSeance = document.getElementById("session-date").value;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("Séance Planifiée", 10, 15);
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Date : ${dateSeance}`, 10, 25);
+
+    let y = 35;
+    items.forEach((card, idx) => {
+      const title = card.querySelector(".exercise-title").textContent.trim();
+      const desc = card
+        .querySelector(".card-back .exercise-details")
+        .textContent.trim();
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${idx + 1}. ${title}`, 10, y);
+
+      y += 8;
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "normal");
+      doc.text(desc, 12, y, { maxWidth: 180 });
+
+      y += 20;
+      if (y > 270) {
+        doc.addPage();
+        y = 20;
+      }
+    });
+
+    doc.save("seance.pdf");
+  });
 })();

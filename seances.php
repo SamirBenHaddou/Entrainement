@@ -141,17 +141,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         </div>
 
         <div class="selected-section">
-            <h2 class="section-title">Séance Planifiée</h2>
             <div class="summary">
-                <strong>Résumé:</strong><br>
-                <span id="exercise-count">0</span> exercices sélectionnés<br>
                 Durée totale estimée: <span id="total-duration">0</span> min
             </div>
             <ul class="selected-exercises" id="selected-exercises">
                 <!-- Les exercices sélectionnés apparaîtront ici -->
             </ul>
+            <button id="export-pdf" class="btn btn-add" style="margin:20px auto 0 auto;display:block;">Exporter en PDF</button>
         </div>
     </div>
     <script src="js/app.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
