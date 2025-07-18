@@ -698,19 +698,19 @@ button[type="submit"]:hover {
     padding: 0.5em 1em;
     align-self: center;
   }
-}
-.container {
-  width: 100%;
-  max-width: 400px;
-  padding: 1.5em;
-  margin: 20px auto;
-  box-sizing: border-box;
-}
+  .container {
+    width: 100%;
+    max-width: 400px;
+    padding: 1.5em;
+    margin: 20px auto;
+    box-sizing: border-box;
+  }
 
-.header {
-  width: 100%;
-  max-width: 400px;
-  margin: 0 auto;
-  box-sizing: border-box;
-  margin-bottom: 20px;
+  .header {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+  }
 }
