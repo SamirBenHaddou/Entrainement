@@ -36,11 +36,11 @@ $email = isset($_SESSION['email']) ? $_SESSION['email'] : 'Utilisateur';
       <p>Consultez, ajoutez ou modifiez votre bibliothèque d'exercices d'entraînement.</p>
     </a>
 
-    <a href="historique.php" class="card">
+    <!--<a href="historique.php" class="card">
       <span class="icon">📊</span>
       <h3>Historique</h3>
       <p>Consultez l'historique de vos séances et suivez votre progression.</p>
-    </a>
+    </a>-->
   </main>
 </body>
 </html>
