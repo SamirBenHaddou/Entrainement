@@ -83,15 +83,6 @@
         `;
       })
       .join("");
-
-    // Ajoute le flip au clic sur la carte disponible
-    document.querySelectorAll(".exercise-card").forEach((card) => {
-      card.addEventListener("click", function (e) {
-        if (!e.target.classList.contains("btn-add")) {
-          this.classList.toggle("flipped");
-        }
-      });
-    });
   }
 
   // Affichage des exercices sélectionnés
@@ -132,7 +123,6 @@
         </li>`
       )
       .join("");
-    // Pas d'écouteur ici, gestion dans le parent (voir ci-dessous)
   }
 
   // Ajout d'un exercice à la séance
@@ -207,7 +197,7 @@
       loadSelectedExercises();
     });
 
-  // Délégation d'événement pour le flip sur les cartes sélectionnées (UNE SEULE FOIS)
+  // Délégation d'événement pour le flip sur les cartes sélectionnées
   document
     .getElementById("selected-exercises")
     .addEventListener("click", function (e) {
@@ -221,6 +211,16 @@
       card.classList.toggle("flipped");
     });
 
+  // ✅ Délégation pour le flip sur les cartes disponibles
+  document
+    .getElementById("exercises-grid")
+    .addEventListener("click", function (e) {
+      const card = e.target.closest(".exercise-card");
+      if (!card) return;
+      if (e.target.classList.contains("btn-add")) return;
+      card.classList.toggle("flipped");
+    });
+
   // Pour accès global depuis HTML inline
   window.addExercise = addExercise;
   window.removeExercise = removeExercise;
@@ -228,6 +228,7 @@
   // Initialisation
   loadExercises().then(loadSelectedExercises);
 
+  // Export PDF
   document.getElementById("export-pdf").addEventListener("click", function () {
     let items = document.querySelectorAll(
       ".selected-exercise-card .exercise-card"
@@ -240,10 +241,8 @@
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // Récupère la date de la séance
     const dateSeance = document.getElementById("session-date").value;
 
-    // Calcule la durée totale
     let totalDuration = 0;
     items.forEach((card) => {
       const duree = card.querySelector(".card-back .duration-info");
@@ -277,11 +276,10 @@
       doc.setFontSize(12);
       doc.setFont("helvetica", "normal");
 
-      // Découpe le descriptif en lignes pour éviter la superposition
       const descLines = doc.splitTextToSize(desc, 180);
       doc.text(descLines, 12, y);
 
-      y += descLines.length * 7 + 8; // 7px par ligne + espace après chaque exercice
+      y += descLines.length * 7 + 8;
 
       if (y > 270) {
         doc.addPage();
