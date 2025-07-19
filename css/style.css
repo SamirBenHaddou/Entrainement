@@ -84,6 +84,7 @@ button[type="submit"]:hover {
 
 .hidden {
   display: none;
+  margin: 10px;
 }
 
 .error {
@@ -633,57 +634,28 @@ button[type="submit"]:hover {
   opacity: 0.7;
 }
 
-/* Responsive pour la page de connexion/inscription */
+/* === RESPONSIVE MOBILE AMÉLIORÉ POUR CONNEXION/INSCRIPTION === */
 @media (max-width: 600px) {
+  /* Container corrigé avec meilleur espacement */
   .container {
-    max-width: 98vw;
-    padding: 1em;
+    width: calc(100% - 40px); /* Laisse 20px de marge de chaque côté */
+    max-width: 400px;
+    padding: 2em 1.5em; /* Plus d'espace interne */
     margin: 20px auto;
-    border-radius: 10px;
+    box-sizing: border-box;
   }
+
+  /* Header responsive amélioré */
   .header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    width: calc(100% - 40px);
+    max-width: 400px;
+    margin: 0 auto 20px auto;
     padding: 1em;
-  }
-  .header h1 {
-    font-size: 1.3rem;
-    text-align: center;
-  }
-  .home-btn {
-    align-self: center;
-    font-size: 1em;
-    padding: 0.5em 1em;
-  }
-  form {
-    width: 100%;
-    min-width: 0;
-  }
-  input[type="email"],
-  input[type="password"] {
-    font-size: 1em;
-    padding: 10px 12px;
-  }
-  button[type="submit"] {
-    font-size: 1em;
-    padding: 10px;
-  }
-  .switch-link {
-    display: block;
-    margin: 10px 0;
-    font-size: 1em;
-  }
-}
-@media (max-width: 600px) {
-  .header {
+    box-sizing: border-box;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    padding: 1em;
-    width: 100%;
-    box-sizing: border-box;
     text-align: center;
   }
 
@@ -696,21 +668,64 @@ button[type="submit"]:hover {
   .home-btn {
     font-size: 1em;
     padding: 0.5em 1em;
-    align-self: center;
   }
-  .container {
+
+  /* Formulaires avec meilleur espacement */
+  form {
     width: 100%;
-    max-width: 400px;
-    padding: 1.5em;
-    margin: 20px auto;
+    padding: 0 15px; /* Ajoute un padding interne au formulaire */
     box-sizing: border-box;
   }
 
-  .header {
-    width: 100%;
-    max-width: 400px;
-    margin: 0 auto;
+  /* Inputs avec espacement corrigé */
+  input[type="email"],
+  input[type="password"] {
+    width: calc(100% - 30px); /* Réduit la largeur pour laisser de l'espace */
+    margin: 0 auto 1em auto; /* Centre les inputs et ajoute de l'espace en bas */
+    padding: 12px 15px;
+    font-size: 16px; /* Empêche le zoom sur iOS */
     box-sizing: border-box;
-    margin-bottom: 20px;
+    display: block; /* Force l'affichage en bloc */
+  }
+
+  /* Labels alignés */
+  label {
+    margin-bottom: 0.5em;
+    margin-left: 15px; /* Aligne avec les inputs */
+    display: block;
+  }
+
+  /* Boutons avec espacement corrigé */
+  button[type="submit"] {
+    width: calc(100% - 30px);
+    margin: 0 auto 1em auto;
+    padding: 12px;
+    display: block;
+    font-size: 1em;
+  }
+
+  /* Titre du formulaire */
+  h2 {
+    text-align: center;
+    margin-bottom: 1.5em;
+    font-size: 1.8rem;
+    padding: 0 15px;
+  }
+
+  /* Messages d'erreur/succès avec meilleur espacement */
+  .error,
+  .success {
+    margin: 0 15px 1em 15px;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  /* Liens de basculement améliorés */
+  .switch-link {
+    display: block;
+    margin: 15px 0;
+    font-size: 0.95em;
+    text-align: center;
   }
 }
