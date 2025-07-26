@@ -8,10 +8,24 @@ if (!isset($_SESSION['user_id'])) {
 
 header('Content-Type: application/json');
 
+$project = 'mastercoach';
+$configs = require 'C:/xampp/config/config.php';
+
+if (!isset($configs[$project])) {
+    http_response_code(500);
+    echo json_encode(['success' => false, 'error' => "Configuration du projet '$project' introuvable."]);
+    exit;
+}
+
+$dbConfig = $configs[$project];
+
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=entrainement', 'root', 'BeagroupSamir!', [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-    ]);
+    $pdo = new PDO(
+        'mysql:host=' . $dbConfig['db_host'] . ';dbname=' . $dbConfig['db_name'],
+        $dbConfig['db_user'],
+        $dbConfig['db_pass'],
+        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+    );
 
     // --- AJOUT, MODIF, SUPPRESSION ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {

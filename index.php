@@ -1,8 +1,11 @@
 <?php
 // === 1. index.php ===
+
+$configs = require 'C:/xampp/config/config.php';
+$db = $configs['mastercoach'];
 session_start();
 
-$pdo = new PDO('mysql:host=localhost;dbname=entrainement', 'root', 'BeagroupSamir!');
+$pdo = new PDO("mysql:host={$db['db_host']};dbname={$db['db_name']}", $db['db_user'], $db['db_pass']);
 
 $error = '';
 $success = '';

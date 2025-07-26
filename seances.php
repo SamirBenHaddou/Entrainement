@@ -7,9 +7,11 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit;
 }
+$configs = require 'C:/xampp/config/config.php';
+$db = $configs['mastercoach'];
 
 try {
-    $pdo = new PDO('mysql:host=localhost;dbname=entrainement', 'root', 'BeagroupSamir!', [
+    $pdo = new PDO("mysql:host={$db['db_host']};dbname={$db['db_name']}", $db['db_user'], $db['db_pass'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
 } catch (Exception $e) {
