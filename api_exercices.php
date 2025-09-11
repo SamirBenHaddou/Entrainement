@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 header('Content-Type: application/json');
 
 $project = 'mastercoach';
-$configs = require 'C:/xampp/config/config.php';
+$configs = require(__DIR__ . "/../config/config.php");
 
 if (!isset($configs[$project])) {
     http_response_code(500);

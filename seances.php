@@ -7,7 +7,7 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit;
 }
-$configs = require 'C:/xampp/config/config.php';
+$configs = require(__DIR__ . "/../config/config.php");
 $db = $configs['mastercoach'];
 
 try {
