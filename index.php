@@ -1,7 +1,7 @@
 <?php
 // === 1. index.php ===
 
-$configs = require 'C:/xampp/config/config.php';
+$configs = require(__DIR__ . "/../../config/config.php");
 $db = $configs['mastercoach'];
 session_start();
 
