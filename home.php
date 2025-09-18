@@ -15,8 +15,7 @@ $email = isset($_SESSION['email']) ? $_SESSION['email'] : 'Utilisateur';
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Accueil - Entrainement</title>
    <link rel="stylesheet" href="css/style.css" />
-</head>
-<!-- Google tag (gtag.js) -->
+   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZK321HQVXR"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -25,6 +24,8 @@ $email = isset($_SESSION['email']) ? $_SESSION['email'] : 'Utilisateur';
 
   gtag('config', 'G-ZK321HQVXR');
 </script>
+</head>
+
 <body>
   <header class="header">
     <div class="welcome">Bienvenue, <strong><?= htmlspecialchars($email) ?></strong></div>

@@ -115,8 +115,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Planificateur d'Entraînement - <?= htmlspecialchars($date_seance) ?></title>
      <link rel="stylesheet" href="css/style.css" />
-</head>
-<!-- Google tag (gtag.js) -->
+     <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZK321HQVXR"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -125,6 +124,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
   gtag('config', 'G-ZK321HQVXR');
 </script>
+</head>
+
 <body>
     <div class="header">
   <h1>🏃‍♂️ Planificateur d'Entraînement</h1>

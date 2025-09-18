@@ -69,8 +69,7 @@ if (isset($_SESSION['user_id'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Connexion / Inscription - Entrainement</title>
   <link rel="stylesheet" href="css/style.css" />
-  </head>
-  <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZK321HQVXR"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -79,6 +78,8 @@ if (isset($_SESSION['user_id'])) {
 
   gtag('config', 'G-ZK321HQVXR');
 </script>
+  </head>
+
 <body>
 
   <div class="header">
