@@ -69,6 +69,15 @@ if (isset($_SESSION['user_id'])) {
   <title>Connexion / Inscription - Entrainement</title>
   <link rel="stylesheet" href="css/style.css" />
   </head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZK321HQVXR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZK321HQVXR');
+</script>
 <body>
 
   <div class="header">

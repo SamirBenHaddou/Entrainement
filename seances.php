@@ -115,6 +115,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <title>Planificateur d'Entraînement - <?= htmlspecialchars($date_seance) ?></title>
      <link rel="stylesheet" href="css/style.css" />
 </head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZK321HQVXR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-ZK321HQVXR');
+</script>
 <body>
     <div class="header">
   <h1>🏃‍♂️ Planificateur d'Entraînement</h1>
