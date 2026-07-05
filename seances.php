@@ -23,6 +23,27 @@ try {
 } catch (Exception $e) {
 }
 
+try {
+    $pdo->exec('ALTER TABLE exercices ADD COLUMN profils_cibles TEXT DEFAULT NULL');
+} catch (Exception $e) {
+}
+
+$positionOptions = [
+    'Gardien',
+    'Defenseur central',
+    'Arriere droit',
+    'Arriere gauche',
+    'Piston droit',
+    'Piston gauche',
+    'Milieu defensif',
+    'Milieu relayeur',
+    'Milieu offensif',
+    'Ailier droit',
+    'Ailier gauche',
+    'Second attaquant',
+    'Avant-centre',
+];
+
 $user_id = $_SESSION['user_id'];
 $date_seance = $_GET['date'] ?? date('Y-m-d');
 
@@ -169,6 +190,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
+    if ($_POST['action'] === 'reordonner_exercices') {
+        $date = $_POST['date'] ?? '';
+        $orderedIds = $_POST['ordered_ids'] ?? [];
+
+        if ($date === '' || !is_array($orderedIds) || count($orderedIds) === 0) {
+            echo json_encode(['success' => false, 'message' => 'Donnees invalides']);
+            exit;
+        }
+
+        $seanceId = getOrCreateSeanceId($pdo, $date, (int) $user_id);
+        $orderedIds = array_values(array_unique(array_filter(array_map('intval', $orderedIds), static function ($value) {
+            return $value > 0;
+        }))));
+
+        if (count($orderedIds) === 0) {
+            echo json_encode(['success' => false, 'message' => 'Ordre invalide']);
+            exit;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($orderedIds), '?'));
+        $params = array_merge([$seanceId], $orderedIds);
+        $stmt = $pdo->prepare("SELECT id FROM seance_exercices WHERE seance_id = ? AND id IN ($placeholders)");
+        $stmt->execute($params);
+        $validIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+        if (count($validIds) !== count($orderedIds)) {
+            echo json_encode(['success' => false, 'message' => 'Exercices invalides']);
+            exit;
+        }
+
+        $pdo->beginTransaction();
+
+        try {
+            $updateStmt = $pdo->prepare('UPDATE seance_exercices SET ordre = ? WHERE id = ? AND seance_id = ?');
+            foreach ($orderedIds as $index => $orderedId) {
+                $updateStmt->execute([$index + 1, $orderedId, $seanceId]);
+            }
+
+            $pdo->commit();
+            echo json_encode(['success' => true]);
+            exit;
+        } catch (Throwable $exception) {
+            $pdo->rollBack();
+            echo json_encode(['success' => false, 'message' => 'Erreur lors du reordonnancement']);
+            exit;
+        }
+    }
+
     if ($_POST['action'] === 'basculer_favori_exercice') {
         $exercice_id = intval($_POST['exercice_id'] ?? 0);
         if ($exercice_id <= 0) {
@@ -258,13 +327,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <input type="date" id="session-date" value="<?= htmlspecialchars($date_seance) ?>">
 </div>
 
-    <div class="filters">
-        <button class="filter-btn active" data-category="Toutes">Toutes</button>
-        <button class="filter-btn" data-category="Favoris">Favoris</button>
-        <button class="filter-btn" data-category="Echauffement">Echauffement</button>
-        <button class="filter-btn" data-category="Endurance">Endurance</button>
-        <button class="filter-btn" data-category="Vitesse">Vitesse</button>
-        <button class="filter-btn" data-category="Agilité">Agilité</button>
+    <div class="planning-toolbar">
+        <div class="planning-search-card">
+            <h2 class="section-title">Trouver le bon exercice</h2>
+            <div class="planning-search-grid">
+                <label>
+                    Recherche rapide
+                    <input type="search" id="exercise-search" placeholder="Nom, description, matériel...">
+                </label>
+                <label>
+                    Format
+                    <select id="exercise-training-format-select">
+                        <option value="tous">Tous les formats</option>
+                        <option value="individuel">Individuel</option>
+                        <option value="groupe">En groupe</option>
+                        <option value="mixte">Mixte</option>
+                    </select>
+                </label>
+                <label>
+                    Tri
+                    <select id="exercise-sort-select">
+                        <option value="favoris">Favoris puis nom</option>
+                        <option value="nom">Nom A-Z</option>
+                        <option value="duree_courte">Durée la plus courte</option>
+                        <option value="duree_longue">Durée la plus longue</option>
+                    </select>
+                </label>
+                <label>
+                    Durée max
+                    <input type="number" id="exercise-duration-max" min="1" placeholder="ex: 15">
+                </label>
+            </div>
+            <div class="planning-search-actions">
+                <label class="position-option planning-checkbox">
+                    <input type="checkbox" id="exercise-favorites-only">
+                    <span>Favoris uniquement</span>
+                </label>
+                <button type="button" class="btn btn-edit" id="reset-exercise-filters">Réinitialiser les filtres</button>
+            </div>
+            <div class="planning-filter-card">
+                <div class="planning-filter-header">
+                    <h3>Types d'exercice</h3>
+                    <p>Gardez vos raccourcis habituels pour bâtir la séance plus vite.</p>
+                </div>
+                <div class="filters planning-quick-filters" id="quick-category-filters">
+                    <button class="filter-btn active" data-category="Toutes">Toutes</button>
+                    <button class="filter-btn" data-category="Favoris">Favoris</button>
+                    <button class="filter-btn" data-category="Echauffement">Echauffement</button>
+                    <button class="filter-btn" data-category="Endurance">Endurance</button>
+                    <button class="filter-btn" data-category="Vitesse">Vitesse</button>
+                    <button class="filter-btn" data-category="Agilité">Agilité</button>
+                </div>
+            </div>
+            <div class="planning-helper-text" id="exercise-results-summary">Chargement du catalogue...</div>
+        </div>
     </div>
 
     <div class="main-container">

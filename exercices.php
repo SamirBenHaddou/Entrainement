@@ -4,6 +4,22 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: index.php');
     exit;
 }
+
+$positionOptions = [
+    'Gardien',
+    'Defenseur central',
+    'Arriere droit',
+    'Arriere gauche',
+    'Piston droit',
+    'Piston gauche',
+    'Milieu defensif',
+    'Milieu relayeur',
+    'Milieu offensif',
+    'Ailier droit',
+    'Ailier gauche',
+    'Second attaquant',
+    'Avant-centre',
+];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -50,6 +66,25 @@ if (!isset($_SESSION['user_id'])) {
                 
                 <label for="ex-materiel">Matériel nécessaire</label>
                 <input type="text" id="ex-materiel">
+
+                <label for="ex-format-entrainement">Type d'entraînement</label>
+                <select id="ex-format-entrainement">
+                    <option value="mixte">Mixte</option>
+                    <option value="individuel">Individuel</option>
+                    <option value="groupe">En groupe</option>
+                </select>
+
+                <div>
+                    <span class="team-field-label">Profils joueurs cibles</span>
+                    <div class="position-selector-grid">
+                        <?php foreach ($positionOptions as $positionOption): ?>
+                            <label class="position-option">
+                                <input type="checkbox" name="ex-profils-cibles[]" value="<?= htmlspecialchars($positionOption) ?>">
+                                <span><?= htmlspecialchars($positionOption) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
 
                 <label class="position-option" style="width: fit-content;">
                     <input type="checkbox" id="ex-favori">
@@ -133,6 +168,8 @@ if (!isset($_SESSION['user_id'])) {
                                     data-description="${escapeQuotes(ex.description)}"
                                     data-duree="${escapeQuotes(ex.duree)}"
                                     data-materiel="${escapeQuotes(ex.materiel)}"
+                                    data-format-entrainement="${escapeQuotes(ex.format_entrainement || 'mixte')}"
+                                    data-profils-cibles="${escapeQuotes(ex.profils_cibles || '')}"
                                     data-favori="${Number(ex.favori) === 1 ? '1' : '0'}"
                                 >Modifier</button>
                                 <button class="btn btn-delete" onclick="deleteExercise('${ex.id}')">Supprimer</button>
@@ -150,6 +187,14 @@ if (!isset($_SESSION['user_id'])) {
                                 <div class="detail-item">
                                     <strong>Matériel :</strong><br>
                                     ${ex.materiel || 'Aucun matériel requis'}
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Type :</strong><br>
+                                    ${formatTrainingType(ex.format_entrainement)}
+                                </div>
+                                <div class="detail-item">
+                                    <strong>Profils ciblés :</strong><br>
+                                    ${ex.profils_cibles || 'Tous profils'}
                                 </div>
                             </div>
                         </div>
@@ -186,11 +231,14 @@ if (!isset($_SESSION['user_id'])) {
             const description = document.getElementById('ex-description').value;
             const duree = document.getElementById('ex-duree').value;
             const materiel = document.getElementById('ex-materiel').value;
+            const formatEntrainement = document.getElementById('ex-format-entrainement').value;
+            const profilsCibles = Array.from(document.querySelectorAll('input[name="ex-profils-cibles[]"]:checked')).map(input => input.value);
             const favori = document.getElementById('ex-favori').checked ? '1' : '0';
             const formData = new URLSearchParams({
-                id, nom, categorie, description, duree, materiel, favori,
+                id, nom, categorie, description, duree, materiel, format_entrainement: formatEntrainement, favori,
                 action: id ? 'modifier' : 'ajouter'
             });
+            profilsCibles.forEach(profil => formData.append('profils_cibles[]', profil));
             fetch('api_exercices.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -208,13 +256,18 @@ if (!isset($_SESSION['user_id'])) {
         };
 
         // Pré-remplir le formulaire pour modification
-        function editExercise(id, nom, categorie, description, duree, materiel, favori) {
+        function editExercise(id, nom, categorie, description, duree, materiel, formatEntrainement, profilsCibles, favori) {
             document.getElementById('ex-id').value = id;
             document.getElementById('ex-nom').value = nom;
             document.getElementById('ex-categorie').value = categorie;
             document.getElementById('ex-description').value = description;
             document.getElementById('ex-duree').value = duree;
             document.getElementById('ex-materiel').value = materiel;
+            document.getElementById('ex-format-entrainement').value = formatEntrainement || 'mixte';
+            const selectedProfils = String(profilsCibles || '').split(',').map(value => value.trim()).filter(Boolean);
+            document.querySelectorAll('input[name="ex-profils-cibles[]"]').forEach(input => {
+                input.checked = selectedProfils.includes(input.value);
+            });
             document.getElementById('ex-favori').checked = Number(favori) === 1;
             document.getElementById('ex-submit').textContent = "Modifier";
             document.getElementById('ex-cancel').style.display = "block";
@@ -228,6 +281,16 @@ if (!isset($_SESSION['user_id'])) {
             document.getElementById('ex-submit').textContent = "Ajouter";
             document.getElementById('ex-cancel').style.display = "none";
             document.getElementById('ex-favori').checked = false;
+            document.getElementById('ex-format-entrainement').value = 'mixte';
+            document.querySelectorAll('input[name="ex-profils-cibles[]"]').forEach(input => {
+                input.checked = false;
+            });
+        }
+
+        function formatTrainingType(value) {
+            if (value === 'individuel') return 'Individuel';
+            if (value === 'groupe') return 'En groupe';
+            return 'Mixte';
         }
 
         function toggleFavorite(id) {
@@ -294,6 +357,8 @@ if (!isset($_SESSION['user_id'])) {
                 btn.getAttribute('data-description'),
                 btn.getAttribute('data-duree'),
                 btn.getAttribute('data-materiel'),
+                btn.getAttribute('data-format-entrainement'),
+                btn.getAttribute('data-profils-cibles'),
                 btn.getAttribute('data-favori')
             );
         }

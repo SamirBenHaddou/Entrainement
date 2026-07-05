@@ -8,6 +8,39 @@ if (!isset($_SESSION['user_id'])) {
 
 header('Content-Type: application/json');
 
+$positionOptions = [
+    'Gardien',
+    'Defenseur central',
+    'Arriere droit',
+    'Arriere gauche',
+    'Piston droit',
+    'Piston gauche',
+    'Milieu defensif',
+    'Milieu relayeur',
+    'Milieu offensif',
+    'Ailier droit',
+    'Ailier gauche',
+    'Second attaquant',
+    'Avant-centre',
+];
+
+function normalize_positions(array $positions, array $positionOptions): ?string
+{
+    $cleanPositions = [];
+
+    foreach ($positions as $position) {
+        $position = trim((string) $position);
+        if ($position === '' || !in_array($position, $positionOptions, true)) {
+            continue;
+        }
+        $cleanPositions[] = $position;
+    }
+
+    $cleanPositions = array_values(array_unique($cleanPositions));
+
+    return count($cleanPositions) > 0 ? implode(', ', $cleanPositions) : null;
+}
+
 $project = 'mastercoach';
 $configs = require(__DIR__ . "/../config/config.php");
 
@@ -32,6 +65,16 @@ try {
     } catch (Exception $e) {
     }
 
+    try {
+        $pdo->exec('ALTER TABLE exercices ADD COLUMN profils_cibles TEXT DEFAULT NULL');
+    } catch (Exception $e) {
+    }
+
+    try {
+        $pdo->exec("ALTER TABLE exercices ADD COLUMN format_entrainement VARCHAR(20) NOT NULL DEFAULT 'mixte'");
+    } catch (Exception $e) {
+    }
+
     // --- AJOUT, MODIF, SUPPRESSION ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
@@ -41,13 +84,18 @@ try {
             $description = $_POST['description'] ?? '';
             $duree = $_POST['duree'] ?? '';
             $materiel = $_POST['materiel'] ?? '';
+            $profilsCibles = normalize_positions($_POST['profils_cibles'] ?? [], $positionOptions);
+            $formatEntrainement = $_POST['format_entrainement'] ?? 'mixte';
             if (!$nom || !$categorie || !$description || !$duree) {
                 echo json_encode(['success' => false, 'error' => 'Champs obligatoires manquants']);
                 exit;
             }
+            if (!in_array($formatEntrainement, ['individuel', 'groupe', 'mixte'], true)) {
+                $formatEntrainement = 'mixte';
+            }
             $favori = isset($_POST['favori']) && (int) $_POST['favori'] === 1 ? 1 : 0;
-            $stmt = $pdo->prepare('INSERT INTO exercices (nom, categorie, description, duree, materiel, favori) VALUES (?, ?, ?, ?, ?, ?)');
-            if ($stmt->execute([$nom, $categorie, $description, $duree, $materiel, $favori])) {
+            $stmt = $pdo->prepare('INSERT INTO exercices (nom, categorie, description, duree, materiel, favori, profils_cibles, format_entrainement) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+            if ($stmt->execute([$nom, $categorie, $description, $duree, $materiel, $favori, $profilsCibles, $formatEntrainement])) {
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false, 'error' => 'Erreur SQL']);
@@ -62,13 +110,18 @@ try {
             $description = $_POST['description'] ?? '';
             $duree = $_POST['duree'] ?? '';
             $materiel = $_POST['materiel'] ?? '';
+            $profilsCibles = normalize_positions($_POST['profils_cibles'] ?? [], $positionOptions);
+            $formatEntrainement = $_POST['format_entrainement'] ?? 'mixte';
             if (!$id || !$nom || !$categorie || !$description || !$duree) {
                 echo json_encode(['success' => false, 'error' => 'Champs obligatoires manquants']);
                 exit;
             }
+            if (!in_array($formatEntrainement, ['individuel', 'groupe', 'mixte'], true)) {
+                $formatEntrainement = 'mixte';
+            }
             $favori = isset($_POST['favori']) && (int) $_POST['favori'] === 1 ? 1 : 0;
-            $stmt = $pdo->prepare('UPDATE exercices SET nom=?, categorie=?, description=?, duree=?, materiel=?, favori=? WHERE id=?');
-            if ($stmt->execute([$nom, $categorie, $description, $duree, $materiel, $favori, $id])) {
+            $stmt = $pdo->prepare('UPDATE exercices SET nom=?, categorie=?, description=?, duree=?, materiel=?, favori=?, profils_cibles=?, format_entrainement=? WHERE id=?');
+            if ($stmt->execute([$nom, $categorie, $description, $duree, $materiel, $favori, $profilsCibles, $formatEntrainement, $id])) {
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false, 'error' => 'Erreur SQL']);
