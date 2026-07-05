@@ -1,6 +1,8 @@
 (() => {
   let allExercises = [];
   let selectedExercises = [];
+  let allPlayers = [];
+  let assignedPlayers = [];
   let currentFilter = "Toutes";
   let currentDate = document.getElementById("session-date").value;
 
@@ -21,7 +23,7 @@
   async function loadSelectedExercises() {
     try {
       const response = await fetch(
-        `seances.php?api=seance&date=${currentDate}`
+        `seances.php?api=seance&date=${currentDate}`,
       );
       selectedExercises = await response.json();
       renderSelectedExercises();
@@ -31,19 +33,49 @@
     }
   }
 
+  async function loadPlayers() {
+    try {
+      const response = await fetch("seances.php?api=joueurs");
+      allPlayers = await response.json();
+      renderSessionPlayers();
+    } catch (error) {
+      console.error("Erreur lors du chargement des joueurs:", error);
+      document.getElementById("session-players").innerHTML =
+        '<div class="empty-state">Erreur lors du chargement des joueurs</div>';
+    }
+  }
+
+  async function loadAssignedPlayers() {
+    try {
+      const response = await fetch(
+        `seances.php?api=joueurs_seance&date=${encodeURIComponent(currentDate)}`,
+      );
+      assignedPlayers = await response.json();
+      renderSessionPlayers();
+    } catch (error) {
+      console.error("Erreur lors du chargement des joueurs assignés:", error);
+    }
+  }
+
   // Affichage des exercices disponibles
   function renderExercises() {
     const grid = document.getElementById("exercises-grid");
     const filteredExercises =
       currentFilter === "Toutes"
         ? allExercises.filter(
-            (ex) => !selectedExercises.some((sel) => sel.id == ex.id)
+            (ex) => !selectedExercises.some((sel) => sel.id == ex.id),
           )
-        : allExercises.filter(
-            (ex) =>
-              ex.categorie === currentFilter &&
-              !selectedExercises.some((sel) => sel.id == ex.id)
-          );
+        : currentFilter === "Favoris"
+          ? allExercises.filter(
+              (ex) =>
+                Number(ex.favori) === 1 &&
+                !selectedExercises.some((sel) => sel.id == ex.id),
+            )
+          : allExercises.filter(
+              (ex) =>
+                ex.categorie === currentFilter &&
+                !selectedExercises.some((sel) => sel.id == ex.id),
+            );
 
     if (filteredExercises.length === 0) {
       grid.innerHTML =
@@ -58,12 +90,16 @@
             <div class="card-inner">
                 <div class="card-front">
                     <div class="exercise-title">${exercise.nom}</div>
+                    ${Number(exercise.favori) === 1 ? '<div class="exercise-category">★ Favori</div>' : ""}
                     <div class="exercise-category">${exercise.categorie}</div>
-                    <button class="btn btn-add" onclick="addExercise(${
-                      exercise.id
-                    }); event.stopPropagation();">
+                    <div class="form-buttons" style="margin-top: 8px;">
+                      <button class="btn btn-edit" onclick="toggleExerciseFavorite(${exercise.id}); event.stopPropagation();">
+                        ${Number(exercise.favori) === 1 ? "Retirer favori" : "Mettre en favori"}
+                      </button>
+                      <button class="btn btn-add" onclick="addExercise(${exercise.id}); event.stopPropagation();">
                         Ajouter
-                    </button>
+                      </button>
+                    </div>
                 </div>
                 <div class="card-back">
                     <div class="exercise-details">
@@ -120,9 +156,70 @@
                     </div>
                 </div>
             </div>
-        </li>`
+        </li>`,
       )
       .join("");
+  }
+
+  function renderSessionPlayers() {
+    const container = document.getElementById("session-players");
+    if (!container) return;
+
+    if (allPlayers.length === 0) {
+      container.innerHTML =
+        '<div class="empty-state team-empty">Ajoutez d\'abord des joueurs depuis la page équipe.</div>';
+      return;
+    }
+
+    const assignedIds = new Set(
+      assignedPlayers.map((player) => Number(player.id)),
+    );
+    container.innerHTML = allPlayers
+      .map((player) => {
+        const checked = assignedIds.has(Number(player.id)) ? "checked" : "";
+        const poste = player.poste ? `<span>${player.poste}</span>` : "";
+        return `
+          <label class="session-player-item">
+            <input type="checkbox" value="${player.id}" ${checked}>
+            <div>
+              <strong>${player.nom}</strong>
+              ${poste}
+            </div>
+          </label>
+        `;
+      })
+      .join("");
+  }
+
+  async function saveAssignedPlayers() {
+    const container = document.getElementById("session-players");
+    if (!container) return;
+
+    const checkedPlayers = Array.from(
+      container.querySelectorAll('input[type="checkbox"]:checked'),
+    ).map((input) => Number(input.value));
+
+    const body = new URLSearchParams();
+    body.set("action", "enregistrer_joueurs_seance");
+    body.set("date", currentDate);
+    checkedPlayers.forEach((id) => body.append("joueurs[]", id));
+
+    const response = await fetch("seances.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      alert(result.message || "Erreur lors de la sauvegarde des joueurs.");
+      return;
+    }
+
+    assignedPlayers = allPlayers.filter((player) =>
+      checkedPlayers.includes(Number(player.id)),
+    );
+    renderSessionPlayers();
   }
 
   // Ajout d'un exercice à la séance
@@ -131,7 +228,7 @@
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `action=ajouter_exercice&exercice_id=${exerciceId}&date=${encodeURIComponent(
-        currentDate
+        currentDate,
       )}`,
     });
     const text = await response.text();
@@ -151,13 +248,25 @@
     }
   }
 
+  async function toggleExerciseFavorite(exerciceId) {
+    const response = await fetch("seances.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `action=basculer_favori_exercice&exercice_id=${exerciceId}`,
+    });
+    const result = await response.json();
+    if (result.success) {
+      await loadExercises();
+    }
+  }
+
   // Suppression d'un exercice de la séance
   async function removeExercise(exerciceId) {
     const response = await fetch("seances.php", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `action=supprimer_exercice&exercice_id=${exerciceId}&date=${encodeURIComponent(
-        currentDate
+        currentDate,
       )}`,
     });
     const result = await response.json();
@@ -172,7 +281,7 @@
   function updateSummary() {
     const total = selectedExercises.reduce(
       (sum, ex) => sum + (parseInt(ex.duree) || 0),
-      0
+      0,
     );
     document.getElementById("total-duration").textContent = total;
   }
@@ -195,6 +304,15 @@
     .addEventListener("change", function () {
       currentDate = this.value;
       loadSelectedExercises();
+      loadAssignedPlayers();
+    });
+
+  document
+    .getElementById("session-players")
+    .addEventListener("change", function (event) {
+      if (event.target.matches('input[type="checkbox"]')) {
+        saveAssignedPlayers();
+      }
     });
 
   // Délégation d'événement pour le flip sur les cartes sélectionnées
@@ -224,14 +342,16 @@
   // Pour accès global depuis HTML inline
   window.addExercise = addExercise;
   window.removeExercise = removeExercise;
+  window.toggleExerciseFavorite = toggleExerciseFavorite;
 
   // Initialisation
   loadExercises().then(loadSelectedExercises);
+  loadPlayers().then(loadAssignedPlayers);
 
   // Export PDF
   document.getElementById("export-pdf").addEventListener("click", function () {
     let items = document.querySelectorAll(
-      ".selected-exercise-card .exercise-card"
+      ".selected-exercise-card .exercise-card",
     );
     if (items.length === 0) {
       alert("Aucun exercice à exporter !");

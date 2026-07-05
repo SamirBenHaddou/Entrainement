@@ -86,6 +86,10 @@ utilisateurs (id, email, password)
 exercices (id, nom, categorie, description, duree, materiel)
 seances (id, date_seance, user_id)
 seance_exercices (id, seance_id, exercice_id, ordre)
+joueurs (id, user_id, nom, poste, points_forts, points_faibles, commentaire_joueur, created_at)
+joueur_seances (id, user_id, joueur_id, date_seance, intitule, commentaire, created_at)
+joueur_matchs (id, user_id, joueur_id, date_match, adversaire, buts, passes_decisives, matchs_joues, created_at)
+seance_joueurs (id, seance_id, joueur_id, created_at)
 ```
 
 ### **Organisation des Fichiers**
@@ -94,9 +98,16 @@ seance_exercices (id, seance_id, exercice_id, ordre)
 - `home.php` - Page d'accueil
 - `exercices.php` - Gestion des exercices
 - `seances.php` - Planification des séances
+- `equipe.php` - Suivi des joueurs, séances individuelles et statistiques de match
 - `api_exercices.php` - API pour les exercices
 - `js/app.js` - Logique JavaScript frontend
 - `css/style.css` - Styles et design
+
+### **Suivi équipe et séances planifiées**
+
+- Les joueurs peuvent être affectés directement à une séance planifiée depuis `seances.php`
+- Ces affectations sont enregistrées dans `seance_joueurs`
+- Les séances affectées aux joueurs remontent automatiquement dans `equipe.php` pour le suivi global
 
 ### **Fonctionnalités Techniques**
 

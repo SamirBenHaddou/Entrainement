@@ -11,22 +11,76 @@ $configs = require(__DIR__ . "/../config/config.php");
 $db = $configs['mastercoach'];
 
 try {
-    $pdo = new PDO("mysql:host={$db['db_host']};dbname={$db['db_name']}", $db['db_user'], $db['db_pass'], [
+    $pdo = new PDO("mysql:host={$db['db_host']};dbname={$db['db_name']};charset=utf8mb4", $db['db_user'], $db['db_pass'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
     ]);
 } catch (Exception $e) {
     die('Erreur base de données : ' . $e->getMessage());
 }
 
+try {
+    $pdo->exec('ALTER TABLE exercices ADD COLUMN favori TINYINT(1) NOT NULL DEFAULT 0');
+} catch (Exception $e) {
+}
+
 $user_id = $_SESSION['user_id'];
 $date_seance = $_GET['date'] ?? date('Y-m-d');
+
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS joueurs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        nom VARCHAR(120) NOT NULL,
+        poste VARCHAR(80) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_joueurs_user (user_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+);
+
+try {
+    $pdo->exec('ALTER TABLE joueurs MODIFY poste VARCHAR(255) DEFAULT NULL');
+} catch (Exception $e) {
+}
+
+$pdo->exec(
+    'CREATE TABLE IF NOT EXISTS seance_joueurs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        seance_id INT NOT NULL,
+        joueur_id INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_seance_joueur (seance_id, joueur_id),
+        INDEX idx_seance_joueurs_joueur (joueur_id),
+        CONSTRAINT fk_seance_joueurs_seance
+            FOREIGN KEY (seance_id) REFERENCES seances(id)
+            ON DELETE CASCADE,
+        CONSTRAINT fk_seance_joueurs_joueur
+            FOREIGN KEY (joueur_id) REFERENCES joueurs(id)
+            ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+);
+
+function getOrCreateSeanceId(PDO $pdo, string $date, int $userId): int
+{
+    $stmt = $pdo->prepare('SELECT id FROM seances WHERE date_seance = ? AND user_id = ?');
+    $stmt->execute([$date, $userId]);
+    $seance = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($seance) {
+        return (int) $seance['id'];
+    }
+
+    $stmt = $pdo->prepare('INSERT INTO seances (date_seance, user_id) VALUES (?, ?)');
+    $stmt->execute([$date, $userId]);
+
+    return (int) $pdo->lastInsertId();
+}
 
 // API endpoints pour AJAX
 if (isset($_GET['api'])) {
     header('Content-Type: application/json');
     
     if ($_GET['api'] === 'exercices') {
-        $stmt = $pdo->query('SELECT * FROM exercices ORDER BY categorie, nom');
+        $stmt = $pdo->query('SELECT *, COALESCE(favori, 0) AS favori FROM exercices ORDER BY favori DESC, categorie, nom');
         $exercices = $stmt->fetchAll(PDO::FETCH_ASSOC);
         echo json_encode($exercices);
         exit;
@@ -46,6 +100,27 @@ if (isset($_GET['api'])) {
         echo json_encode($exercices);
         exit;
     }
+
+    if ($_GET['api'] === 'joueurs') {
+        $stmt = $pdo->prepare('SELECT id, nom, poste FROM joueurs WHERE user_id = ? ORDER BY nom ASC');
+        $stmt->execute([$user_id]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        exit;
+    }
+
+    if ($_GET['api'] === 'joueurs_seance' && isset($_GET['date'])) {
+        $stmt = $pdo->prepare(
+            'SELECT j.id, j.nom, j.poste
+             FROM joueurs j
+             JOIN seance_joueurs sj ON sj.joueur_id = j.id
+             JOIN seances s ON s.id = sj.seance_id
+             WHERE s.date_seance = ? AND s.user_id = ?
+             ORDER BY j.nom ASC'
+        );
+        $stmt->execute([$_GET['date'], $user_id]);
+        echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+        exit;
+    }
 }
 
 // Gestion des actions POST via AJAX
@@ -56,18 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $exercice_id = intval($_POST['exercice_id']);
         $date = $_POST['date'];
 
-        // Créer ou récupérer la séance
-        $stmt = $pdo->prepare('SELECT id FROM seances WHERE date_seance = ? AND user_id = ?');
-        $stmt->execute([$date, $user_id]);
-        $seance = $stmt->fetch();
-
-        if (!$seance) {
-            $stmt = $pdo->prepare('INSERT INTO seances (date_seance, user_id) VALUES (?, ?)');
-            $stmt->execute([$date, $user_id]);
-            $seance_id = $pdo->lastInsertId();
-        } else {
-            $seance_id = $seance['id'];
-        }
+        $seance_id = getOrCreateSeanceId($pdo, $date, (int) $user_id);
 
         // Vérifier si l'exercice n'est pas déjà ajouté
         $stmt = $pdo->prepare('SELECT 1 FROM seance_exercices WHERE seance_id = ? AND exercice_id = ?');
@@ -104,6 +168,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         echo json_encode(['success' => true]);
         exit;
     }
+
+    if ($_POST['action'] === 'basculer_favori_exercice') {
+        $exercice_id = intval($_POST['exercice_id'] ?? 0);
+        if ($exercice_id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Exercice invalide']);
+            exit;
+        }
+
+        $stmt = $pdo->prepare('UPDATE exercices SET favori = CASE WHEN favori = 1 THEN 0 ELSE 1 END WHERE id = ?');
+        $stmt->execute([$exercice_id]);
+
+        echo json_encode(['success' => true]);
+        exit;
+    }
+
+    if ($_POST['action'] === 'enregistrer_joueurs_seance') {
+        $date = $_POST['date'] ?? '';
+        $joueurs = $_POST['joueurs'] ?? [];
+
+        if ($date === '' || !is_array($joueurs)) {
+            echo json_encode(['success' => false, 'message' => 'Donnees invalides']);
+            exit;
+        }
+
+        $seanceId = getOrCreateSeanceId($pdo, $date, (int) $user_id);
+        $joueurIds = array_values(array_unique(array_filter(array_map('intval', $joueurs), static function ($value) {
+            return $value > 0;
+        })));
+
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare('DELETE sj FROM seance_joueurs sj JOIN seances s ON s.id = sj.seance_id WHERE sj.seance_id = ? AND s.user_id = ?');
+            $stmt->execute([$seanceId, $user_id]);
+
+            if (count($joueurIds) > 0) {
+                $placeholders = implode(',', array_fill(0, count($joueurIds), '?'));
+                $params = array_merge([$user_id], $joueurIds);
+                $stmt = $pdo->prepare("SELECT id FROM joueurs WHERE user_id = ? AND id IN ($placeholders)");
+                $stmt->execute($params);
+                $joueursValides = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
+
+                $insertStmt = $pdo->prepare('INSERT INTO seance_joueurs (seance_id, joueur_id) VALUES (?, ?)');
+                foreach ($joueursValides as $joueurId) {
+                    $insertStmt->execute([$seanceId, $joueurId]);
+                }
+            }
+
+            $pdo->commit();
+            echo json_encode(['success' => true]);
+            exit;
+        } catch (Throwable $exception) {
+            $pdo->rollBack();
+            echo json_encode(['success' => false, 'message' => 'Erreur lors de la sauvegarde des joueurs']);
+            exit;
+        }
+    }
 }
 ?>
 
@@ -139,6 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     <div class="filters">
         <button class="filter-btn active" data-category="Toutes">Toutes</button>
+        <button class="filter-btn" data-category="Favoris">Favoris</button>
         <button class="filter-btn" data-category="Echauffement">Echauffement</button>
         <button class="filter-btn" data-category="Endurance">Endurance</button>
         <button class="filter-btn" data-category="Vitesse">Vitesse</button>
@@ -157,6 +279,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="summary">
   Durée totale estimée: <span id="total-duration">0</span> min
 </div>
+            <div class="team-assignment" id="team-assignment">
+                <h3>Joueurs presents a la seance</h3>
+                <div id="session-players" class="session-players-list">
+                    <div class="loading">Chargement des joueurs...</div>
+                </div>
+            </div>
             <ul class="selected-exercises" id="selected-exercises">
                 <!-- Les exercices sélectionnés apparaîtront ici -->
             </ul>

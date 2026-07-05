@@ -13,7 +13,7 @@ $email = isset($_SESSION['email']) ? $_SESSION['email'] : 'Utilisateur';
   <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="f7070317-bfa5-464f-bf91-24cf10f1ad59" type="text/javascript" async></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Accueil - Entrainement</title>
+  <title>Planificateur d'Entraînement - MasterCoach</title>
    <link rel="stylesheet" href="css/style.css" />
    <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZK321HQVXR"></script>
@@ -45,6 +45,12 @@ $email = isset($_SESSION['email']) ? $_SESSION['email'] : 'Utilisateur';
       <span class="icon">📋</span>
       <h3>Gérer les exercices</h3>
       <p>Consultez, ajoutez ou modifiez votre bibliothèque d'exercices d'entraînement.</p>
+    </a>
+
+    <a href="equipe.php" class="card">
+      <span class="icon">⚽</span>
+      <h3>Suivre l'équipe</h3>
+      <p>Mémorisez les séances réalisées par joueur et suivez les buts, passes décisives et matchs joués.</p>
     </a>
 
     <!--<a href="historique.php" class="card">

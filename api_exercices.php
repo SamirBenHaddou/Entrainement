@@ -27,6 +27,11 @@ try {
         [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
     );
 
+    try {
+        $pdo->exec('ALTER TABLE exercices ADD COLUMN favori TINYINT(1) NOT NULL DEFAULT 0');
+    } catch (Exception $e) {
+    }
+
     // --- AJOUT, MODIF, SUPPRESSION ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $action = $_POST['action'] ?? '';
@@ -40,8 +45,9 @@ try {
                 echo json_encode(['success' => false, 'error' => 'Champs obligatoires manquants']);
                 exit;
             }
-            $stmt = $pdo->prepare('INSERT INTO exercices (nom, categorie, description, duree, materiel) VALUES (?, ?, ?, ?, ?)');
-            if ($stmt->execute([$nom, $categorie, $description, $duree, $materiel])) {
+            $favori = isset($_POST['favori']) && (int) $_POST['favori'] === 1 ? 1 : 0;
+            $stmt = $pdo->prepare('INSERT INTO exercices (nom, categorie, description, duree, materiel, favori) VALUES (?, ?, ?, ?, ?, ?)');
+            if ($stmt->execute([$nom, $categorie, $description, $duree, $materiel, $favori])) {
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false, 'error' => 'Erreur SQL']);
@@ -60,8 +66,25 @@ try {
                 echo json_encode(['success' => false, 'error' => 'Champs obligatoires manquants']);
                 exit;
             }
-            $stmt = $pdo->prepare('UPDATE exercices SET nom=?, categorie=?, description=?, duree=?, materiel=? WHERE id=?');
-            if ($stmt->execute([$nom, $categorie, $description, $duree, $materiel, $id])) {
+            $favori = isset($_POST['favori']) && (int) $_POST['favori'] === 1 ? 1 : 0;
+            $stmt = $pdo->prepare('UPDATE exercices SET nom=?, categorie=?, description=?, duree=?, materiel=?, favori=? WHERE id=?');
+            if ($stmt->execute([$nom, $categorie, $description, $duree, $materiel, $favori, $id])) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Erreur SQL']);
+            }
+            exit;
+        }
+
+        if ($action === 'basculer_favori') {
+            $id = (int) ($_POST['id'] ?? 0);
+            if ($id <= 0) {
+                echo json_encode(['success' => false, 'error' => 'ID manquant']);
+                exit;
+            }
+
+            $stmt = $pdo->prepare('UPDATE exercices SET favori = CASE WHEN favori = 1 THEN 0 ELSE 1 END WHERE id = ?');
+            if ($stmt->execute([$id])) {
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false, 'error' => 'Erreur SQL']);
@@ -86,7 +109,7 @@ try {
     }
 
     // --- LECTURE (GET) ---
-    $stmt = $pdo->query('SELECT * FROM exercices ORDER BY categorie, nom');
+    $stmt = $pdo->query('SELECT *, COALESCE(favori, 0) AS favori FROM exercices ORDER BY favori DESC, categorie, nom');
     $exercices = $stmt->fetchAll(PDO::FETCH_ASSOC);
     echo json_encode($exercices);
 

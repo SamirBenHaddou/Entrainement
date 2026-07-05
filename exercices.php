@@ -50,6 +50,11 @@ if (!isset($_SESSION['user_id'])) {
                 
                 <label for="ex-materiel">Matériel nécessaire</label>
                 <input type="text" id="ex-materiel">
+
+                <label class="position-option" style="width: fit-content;">
+                    <input type="checkbox" id="ex-favori">
+                    <span>Exercice favori</span>
+                </label>
                 
                 <div class="form-buttons">
                     <button type="submit" class="btn btn-add" id="ex-submit">Ajouter</button>
@@ -64,6 +69,7 @@ if (!isset($_SESSION['user_id'])) {
             <!-- Filtres par catégorie -->
             <div class="filters">
                 <button class="filter-btn active" onclick="filterExercises('all')">Tous</button>
+                <button class="filter-btn" onclick="filterExercises('favoris')">Favoris</button>
                 <button class="filter-btn" onclick="filterExercises('Echauffement')">Echauffement</button>
                 <button class="filter-btn" onclick="filterExercises('Endurance')">Endurance</button>
                 <button class="filter-btn" onclick="filterExercises('Vitesse')">Vitesse</button>
@@ -95,6 +101,8 @@ if (!isset($_SESSION['user_id'])) {
             // Filtrage et affichage
             const filteredExercises = category === 'all' 
                 ? allExercises 
+                : category === 'favoris'
+                ? allExercises.filter(ex => Number(ex.favori) === 1)
                 : allExercises.filter(ex => ex.categorie === category);
             
             displayExercises(filteredExercises);
@@ -113,9 +121,11 @@ if (!isset($_SESSION['user_id'])) {
                     <div class="card-inner">
                         <div class="card-front">
                             <div class="exercise-title">${ex.nom}</div>
+                            ${Number(ex.favori) === 1 ? '<div class="exercise-category">★ Favori</div>' : ''}
                             <div class="exercise-category">${ex.categorie}</div>
                             <div class="exercise-duration">${ex.duree} min</div>
                             <div class="card-actions">
+                                <button class="btn btn-edit" onclick="toggleFavorite('${ex.id}')">${Number(ex.favori) === 1 ? 'Retirer favori' : 'Mettre en favori'}</button>
                                 <button class="btn btn-edit" onclick="editExerciseFromBtn(this)" 
                                     data-id="${ex.id}"
                                     data-nom="${escapeQuotes(ex.nom)}"
@@ -123,6 +133,7 @@ if (!isset($_SESSION['user_id'])) {
                                     data-description="${escapeQuotes(ex.description)}"
                                     data-duree="${escapeQuotes(ex.duree)}"
                                     data-materiel="${escapeQuotes(ex.materiel)}"
+                                    data-favori="${Number(ex.favori) === 1 ? '1' : '0'}"
                                 >Modifier</button>
                                 <button class="btn btn-delete" onclick="deleteExercise('${ex.id}')">Supprimer</button>
                             </div>
@@ -175,8 +186,9 @@ if (!isset($_SESSION['user_id'])) {
             const description = document.getElementById('ex-description').value;
             const duree = document.getElementById('ex-duree').value;
             const materiel = document.getElementById('ex-materiel').value;
+            const favori = document.getElementById('ex-favori').checked ? '1' : '0';
             const formData = new URLSearchParams({
-                id, nom, categorie, description, duree, materiel,
+                id, nom, categorie, description, duree, materiel, favori,
                 action: id ? 'modifier' : 'ajouter'
             });
             fetch('api_exercices.php', {
@@ -196,13 +208,14 @@ if (!isset($_SESSION['user_id'])) {
         };
 
         // Pré-remplir le formulaire pour modification
-        function editExercise(id, nom, categorie, description, duree, materiel) {
+        function editExercise(id, nom, categorie, description, duree, materiel, favori) {
             document.getElementById('ex-id').value = id;
             document.getElementById('ex-nom').value = nom;
             document.getElementById('ex-categorie').value = categorie;
             document.getElementById('ex-description').value = description;
             document.getElementById('ex-duree').value = duree;
             document.getElementById('ex-materiel').value = materiel;
+            document.getElementById('ex-favori').checked = Number(favori) === 1;
             document.getElementById('ex-submit').textContent = "Modifier";
             document.getElementById('ex-cancel').style.display = "block";
         }
@@ -214,6 +227,23 @@ if (!isset($_SESSION['user_id'])) {
             document.getElementById('ex-id').value = "";
             document.getElementById('ex-submit').textContent = "Ajouter";
             document.getElementById('ex-cancel').style.display = "none";
+            document.getElementById('ex-favori').checked = false;
+        }
+
+        function toggleFavorite(id) {
+            fetch('api_exercices.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: new URLSearchParams({id, action: 'basculer_favori'})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    loadExercises();
+                } else {
+                    alert(data.error || "Erreur lors de la mise à jour du favori.");
+                }
+            });
         }
 
         // Suppression d'un exercice
@@ -263,7 +293,8 @@ if (!isset($_SESSION['user_id'])) {
                 btn.getAttribute('data-categorie'),
                 btn.getAttribute('data-description'),
                 btn.getAttribute('data-duree'),
-                btn.getAttribute('data-materiel')
+                btn.getAttribute('data-materiel'),
+                btn.getAttribute('data-favori')
             );
         }
     </script>

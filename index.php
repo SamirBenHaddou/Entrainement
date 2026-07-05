@@ -67,7 +67,8 @@ if (isset($_SESSION['user_id'])) {
   <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="f7070317-bfa5-464f-bf91-24cf10f1ad59" type="text/javascript" async></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connexion / Inscription - Entrainement</title>
+  <title>Planificateur d'Entraînement - MasterCoach</title>
+  <meta name="description" content="Créez et planifiez vos séances d'entraînement personnalisées avec MasterCoach. Suivi, conseils et exercices adaptés à tous les niveaux.">
   <link rel="stylesheet" href="css/style.css" />
     <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZK321HQVXR"></script>
