@@ -512,6 +512,7 @@
     if (allPlayers.length === 0) {
       container.innerHTML =
         '<div class="empty-state team-empty">Ajoutez d\'abord des joueurs depuis la page équipe.</div>';
+      updateSessionPlayersToggle();
       return;
     }
 
@@ -533,6 +534,24 @@
         `;
       })
       .join("");
+    updateSessionPlayersToggle();
+  }
+
+  function updateSessionPlayersToggle() {
+    const button = document.getElementById("toggle-all-session-players");
+    const container = document.getElementById("session-players");
+    if (!button || !container) return;
+
+    const checkboxes = Array.from(
+      container.querySelectorAll('input[type="checkbox"]'),
+    );
+    const allSelected =
+      checkboxes.length > 0 && checkboxes.every((checkbox) => checkbox.checked);
+
+    button.disabled = checkboxes.length === 0;
+    button.textContent = allSelected
+      ? "Tout désélectionner"
+      : "Tout sélectionner";
   }
 
   async function saveAssignedPlayers() {
@@ -856,6 +875,20 @@
       if (event.target.matches('input[type="checkbox"]')) {
         saveAssignedPlayers();
       }
+    });
+
+  document
+    .getElementById("toggle-all-session-players")
+    .addEventListener("click", async function () {
+      const checkboxes = Array.from(
+        document.querySelectorAll('#session-players input[type="checkbox"]'),
+      );
+      const shouldSelectAll = checkboxes.some((checkbox) => !checkbox.checked);
+
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = shouldSelectAll;
+      });
+      await saveAssignedPlayers();
     });
 
   // Délégation d'événement pour le flip sur les cartes sélectionnées

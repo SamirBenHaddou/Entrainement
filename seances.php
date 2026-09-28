@@ -984,7 +984,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
   Durée totale estimée: <span id="total-duration">0</span> min
 </div>
             <div class="team-assignment" id="team-assignment">
-                <h3>Joueurs presents a la seance</h3>
+                <div class="session-players-header">
+                    <h3>Joueurs presents a la seance</h3>
+                    <button type="button" class="btn btn-edit" id="toggle-all-session-players">Tout sélectionner</button>
+                </div>
                 <div id="session-players" class="session-players-list">
                     <div class="loading">Chargement des joueurs...</div>
                 </div>
@@ -1003,7 +1006,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         Voir la séance (<span id="mobile-selected-count">0</span>)
     </button>
 
-    <script src="js/app.js"></script>
+    <script src="js/app.js?v=<?= filemtime(__DIR__ . '/js/app.js') ?>"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
