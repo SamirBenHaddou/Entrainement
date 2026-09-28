@@ -144,14 +144,19 @@ if ($selectedSeasonId > 0 && !in_array($selectedSeasonId, $knownSeasonIds, true)
 
 $summarySql =
     'SELECT
-        COALESCE(SUM(matchs_joues), 0) AS matchs,
-        COALESCE(SUM(buts), 0) AS buts,
-        COALESCE(SUM(passes_decisives), 0) AS passes
-     FROM joueur_matchs
-     WHERE user_id = :user_id AND joueur_id = :joueur_id' . ($selectedSeasonId > 0 ? ' AND saison_id = :season_id' : '');
+        COALESCE(SUM(jm.matchs_joues), 0) AS matchs,
+        COALESCE(SUM(jm.buts), 0) AS buts,
+        COALESCE(SUM(jm.passes_decisives), 0) AS passes
+     FROM joueur_matchs jm
+     JOIN equipe_matchs em ON em.id = jm.match_id AND em.user_id = jm.user_id
+     WHERE jm.user_id = :user_id
+       AND jm.joueur_id = :joueur_id
+       AND em.equipe_id = :team_id
+       AND em.statut = "joue"' . ($selectedSeasonId > 0 ? ' AND em.saison_id = :season_id' : '');
 $summaryStmt = $pdo->prepare($summarySql);
 $summaryStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
 $summaryStmt->bindValue(':joueur_id', $joueurId, PDO::PARAM_INT);
+$summaryStmt->bindValue(':team_id', $selectedTeamId, PDO::PARAM_INT);
 if ($selectedSeasonId > 0) {
     $summaryStmt->bindValue(':season_id', $selectedSeasonId, PDO::PARAM_INT);
 }
@@ -180,13 +185,17 @@ $matchsSql =
         em.score_equipe,
         em.score_adverse
      FROM joueur_matchs jm
-     LEFT JOIN equipe_matchs em ON em.id = jm.match_id AND em.user_id = jm.user_id
-     WHERE jm.user_id = :user_id AND jm.joueur_id = :joueur_id' . ($selectedSeasonId > 0 ? ' AND jm.saison_id = :season_id' : '') . '
+    JOIN equipe_matchs em ON em.id = jm.match_id AND em.user_id = jm.user_id
+    WHERE jm.user_id = :user_id
+      AND jm.joueur_id = :joueur_id
+      AND em.equipe_id = :team_id
+      AND em.statut = "joue"' . ($selectedSeasonId > 0 ? ' AND em.saison_id = :season_id' : '') . '
      ORDER BY jm.date_match DESC, jm.id DESC
      LIMIT 50';
 $matchsStmt = $pdo->prepare($matchsSql);
 $matchsStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
 $matchsStmt->bindValue(':joueur_id', $joueurId, PDO::PARAM_INT);
+$matchsStmt->bindValue(':team_id', $selectedTeamId, PDO::PARAM_INT);
 if ($selectedSeasonId > 0) {
     $matchsStmt->bindValue(':season_id', $selectedSeasonId, PDO::PARAM_INT);
 }

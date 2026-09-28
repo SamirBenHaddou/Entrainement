@@ -244,9 +244,72 @@ button[type="submit"]:hover {
   margin: 0;
 }
 
+.team-match-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+}
+
+.team-match-actions > .btn,
+.team-match-actions > form,
+.team-match-actions > form > .btn {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.match-history-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+}
+
+.match-history-actions > .btn,
+.match-history-actions > form,
+.match-history-actions > form > .btn {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  box-sizing: border-box;
+}
+
 @media (max-width: 768px) {
-  .form-buttons {
+  .form-buttons,
+  .planning-search-actions,
+  .planning-ai-actions {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-buttons > .btn,
+  .form-buttons > form,
+  .form-buttons > form > .btn,
+  .planning-search-actions > .btn,
+  .planning-ai-actions > .btn {
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  .team-feed-card > .form-buttons,
+  .team-feed-card > .inline-action-form {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .team-feed-card .form-buttons > .btn,
+  .team-feed-card > .inline-action-form > .btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    box-sizing: border-box;
   }
 }
 
@@ -337,12 +400,19 @@ button[type="submit"]:hover {
   margin: 0 auto 24px auto;
 }
 
-.planning-search-card,
-.selected-section {
+.planning-search-card {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
   padding: 25px;
   border-radius: 15px;
+}
+
+.selected-section {
+  background: rgba(248, 251, 255, 0.94);
+  backdrop-filter: blur(10px);
+  padding: 25px;
+  border-radius: 15px;
+  border: 1px solid rgba(31, 42, 68, 0.12);
 }
 
 .planning-search-card {
@@ -358,15 +428,16 @@ button[type="submit"]:hover {
 .planning-filter-header {
   display: flex;
   align-items: baseline;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   color: white;
 }
 
 .planning-filter-header h3 {
   margin: 0;
   font-size: 1.05rem;
+  color: #1f2a44;
 }
 
 .planning-filter-header p {
@@ -426,6 +497,65 @@ button[type="submit"]:hover {
   font-size: 0.95rem;
 }
 
+.planning-ai-box {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.planning-ai-box h3 {
+  margin: 0 0 12px 0;
+  color: #1f2a44;
+  font-size: 1rem;
+}
+
+.planning-ai-grid {
+  margin-bottom: 10px;
+}
+
+.planning-ai-box > label {
+  display: block;
+  color: white;
+  margin-top: 8px;
+}
+
+.planning-ai-box input,
+.planning-ai-box select {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #222;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+
+.planning-ai-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.planning-ai-actions .btn {
+  flex: 1 1 220px;
+  margin: 0;
+}
+
+.ai-session-preview {
+  margin: 10px 0 0 18px;
+  color: white;
+  display: grid;
+  gap: 6px;
+}
+
+.ai-session-preview small {
+  opacity: 0.85;
+}
+
 .planning-quick-filters .filter-btn {
   margin: 0;
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -448,7 +578,7 @@ button[type="submit"]:hover {
 .summary {
   background: rgba(255, 255, 255, 0.14);
   border-radius: 16px;
-  color: white;
+  color: #1f2a44;
   text-align: center;
   padding: 16px 18px;
   font-size: 1.05rem;
@@ -456,19 +586,38 @@ button[type="submit"]:hover {
   margin-bottom: 20px;
 }
 
+.selected-mobile-header {
+  display: none;
+}
+
+.mobile-selected-toggle {
+  display: none;
+}
+
+.selected-mobile-footer {
+  display: none;
+}
+
 /* === GRILLE D'EXERCICES === */
+:root {
+  --exercise-card-width: 336px;
+  --exercise-card-height: 268px;
+  --exercise-card-gap: 34px;
+  --exercise-card-padding: 26px 24px;
+}
+
 .exercises-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 32px 32px;
-  justify-content: flex-start;
+  gap: var(--exercise-card-gap);
+  justify-content: center;
   align-items: flex-start;
-  margin-top: 20px;
+  margin-top: 30px;
 }
 
 .exercise-card {
-  width: 320px;
-  height: 220px;
+  width: var(--exercise-card-width);
+  height: var(--exercise-card-height);
   perspective: 1000px;
   background: none;
   border: none;
@@ -508,7 +657,7 @@ button[type="submit"]:hover {
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 25px;
+  padding: var(--exercise-card-padding);
   word-break: break-word;
   overflow: hidden;
   width: 100%;
@@ -518,6 +667,8 @@ button[type="submit"]:hover {
 
 .card-front {
   background: linear-gradient(135deg, #ffafcc 0%, #bde0fe 100%);
+  justify-content: flex-start;
+  gap: 12px;
 }
 
 .card-back {
@@ -542,15 +693,39 @@ button[type="submit"]:hover {
     min-width: 0 !important;
     max-width: 100% !important;
     flex: 1 1 100% !important;
-    min-height: 220px !important; /* Hauteur minimale pour le flip */
+    min-height: 320px !important;
     height: auto !important;
   }
   .card-front,
   .card-back {
     padding: 15px;
-    min-height: 220px !important;
+    min-height: 320px !important;
     height: 100% !important;
     overflow-y: auto; /* Ajoute une barre de scroll si besoin */
+  }
+
+  .card-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-direction: initial;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .card-actions .btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    margin: 0;
+    padding: 8px;
+    box-sizing: border-box;
+    font-size: 0.82rem;
+    white-space: normal;
+  }
+
+  .card-actions .btn-delete {
+    grid-column: 1 / -1;
+    flex-basis: auto;
   }
 }
 
@@ -558,9 +733,11 @@ button[type="submit"]:hover {
 .exercise-title {
   font-size: 1.4rem;
   font-weight: bold;
-  margin-bottom: 10px;
+  margin: 0 0 4px 0;
   text-align: center;
   color: #22223b;
+  line-height: 1.25;
+  max-width: 100%;
 }
 
 .exercise-category {
@@ -569,9 +746,21 @@ button[type="submit"]:hover {
   padding: 6px 18px;
   border-radius: 20px;
   font-size: 0.95rem;
-  margin-bottom: 18px;
+  margin: 0;
   text-align: center;
   display: inline-block;
+}
+
+.card-front .form-buttons {
+  width: 100%;
+  margin-top: auto !important;
+  justify-content: center;
+  gap: 12px;
+  padding-top: 14px;
+}
+
+.card-front .form-buttons .btn {
+  flex: 1 1 0;
 }
 
 .exercise-details {
@@ -587,9 +776,22 @@ button[type="submit"]:hover {
 .card-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   justify-content: center;
-  margin-top: 18px;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 8px;
+  align-content: flex-end;
+}
+
+.card-actions .btn {
+  flex: 1 1 calc(50% - 10px);
+  min-width: 124px;
+  margin: 0;
+}
+
+.card-actions .btn-delete {
+  flex-basis: 100%;
 }
 
 @media (max-width: 900px) {
@@ -621,6 +823,100 @@ button[type="submit"]:hover {
   .exercises-grid .exercise-card {
     flex: 1 1 100%;
     min-width: 250px;
+  }
+
+  .planner-page {
+    padding-bottom: 88px;
+  }
+
+  .selected-section {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    margin: 0;
+    border-radius: 16px 16px 0 0;
+    max-height: 78vh;
+    overflow-y: auto;
+    box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.22);
+    transform: translateY(105%);
+    transition: transform 0.25s ease;
+    padding: 18px 16px 22px 16px;
+  }
+
+  body.mobile-selected-open .selected-section {
+    transform: translateY(0);
+  }
+
+  .selected-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .selected-mobile-header h2 {
+    margin: 0;
+    color: #1f2a44;
+    font-size: 1.05rem;
+  }
+
+  .planning-toolbar .section-title,
+  .selected-section .section-title,
+  .team-assignment h3 {
+    color: #1f2a44;
+  }
+
+  .selected-mobile-header .btn {
+    min-width: 92px;
+    min-height: 38px;
+    padding: 8px 12px;
+    margin: 0;
+  }
+
+  .selected-mobile-footer {
+    display: block;
+    position: sticky;
+    bottom: -1px;
+    padding-top: 12px;
+    margin-top: 12px;
+    background: linear-gradient(
+      180deg,
+      rgba(248, 251, 255, 0) 0%,
+      rgba(248, 251, 255, 0.98) 38%
+    );
+  }
+
+  .selected-mobile-footer .btn {
+    width: 100%;
+    margin: 0;
+  }
+
+  .mobile-selected-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    z-index: 1010;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 18px;
+    background: linear-gradient(135deg, #4ecdc4 0%, #2bb5ac 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+  }
+
+  .mobile-selected-open .mobile-selected-toggle {
+    opacity: 0;
+    pointer-events: none;
   }
 
   .planning-search-grid {
@@ -681,7 +977,25 @@ button[type="submit"]:hover {
   transition: background 0.2s;
 }
 
+.date-selector select {
+  padding: 12px 18px;
+  border-radius: 25px;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #222;
+  font-size: 1.05em;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  outline: none;
+  margin-top: 8px;
+  min-width: 260px;
+}
+
 .date-selector input[type="date"]:focus {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.date-selector select:focus {
   background: rgba(255, 255, 255, 0.25);
 }
 
@@ -689,18 +1003,60 @@ button[type="submit"]:hover {
 .selected-exercises {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: var(--exercise-card-gap);
   list-style: none;
   padding: 0;
   margin: 0;
+  justify-content: center;
 }
 
 .selected-exercise-card {
   margin: 0;
   padding: 0;
   flex: 0 0 auto;
-  width: 320px;
+  width: var(--exercise-card-width);
+  cursor: grab;
   /* Pour que la carte soit horizontale comme les autres */
+}
+
+.selected-exercise-card.dragging {
+  opacity: 0.55;
+}
+
+.selected-exercise-card.drag-over {
+  transform: translateY(-4px);
+}
+
+.selected-exercise-card.drag-over .card-front,
+.selected-exercise-card.drag-over .card-back {
+  box-shadow:
+    0 0 0 3px rgba(78, 205, 196, 0.45),
+    0 14px 30px rgba(0, 0, 0, 0.12);
+}
+
+.selected-exercise-meta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.drag-handle,
+.exercise-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  color: #364156;
+  font-weight: 700;
+}
+
+.drag-handle {
+  cursor: grab;
 }
 
 @media (max-width: 900px) {
@@ -792,6 +1148,54 @@ button[type="submit"]:hover {
 }
 
 /* Suivi d'equipe */
+.team-tabs {
+  max-width: 1400px;
+  margin: 0 auto 18px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.team-tab-button {
+  min-width: 0;
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.team-tab-button:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.team-tab-button[aria-selected="true"] {
+  border-color: white;
+  background: white;
+  color: #1f2a44;
+}
+
+.team-tab-button:focus-visible {
+  outline: 3px solid #4ecdc4;
+  outline-offset: 2px;
+}
+
+.team-tab-panel {
+  max-width: 1400px;
+  margin: 0 auto 24px;
+}
+
+.team-tab-panel[hidden] {
+  display: none;
+}
+
 .team-layout {
   max-width: 1400px;
   margin: 0 auto;
@@ -802,10 +1206,22 @@ button[type="submit"]:hover {
 
 .team-summary-grid {
   max-width: 1400px;
-  margin: 0 auto 24px auto;
+  margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 16px;
+}
+
+.team-stat-section {
+  max-width: 1400px;
+  margin: 0 auto 24px auto;
+}
+
+.team-stat-title {
+  margin: 0 0 12px;
+  color: white;
+  font-size: 1.15rem;
+  text-align: left;
 }
 
 .team-summary-card {
@@ -928,6 +1344,21 @@ button[type="submit"]:hover {
   line-height: 1.4;
 }
 
+.team-session-actions {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.team-session-actions > .btn,
+.team-session-actions > form,
+.team-session-actions > form > .btn {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
 .inline-action-form {
   margin-top: 12px;
 }
@@ -972,6 +1403,51 @@ button[type="submit"]:hover {
   align-items: center;
   justify-content: center;
   margin: 0;
+}
+
+.team-roster-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.team-roster-header .section-title {
+  margin: 0;
+  text-align: left;
+}
+
+.team-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.team-roster-card {
+  min-width: 0;
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.team-roster-details {
+  min-width: 0;
+}
+
+.team-roster-details h3 {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.team-roster-positions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .team-field-label {
@@ -1112,16 +1588,17 @@ button[type="submit"]:hover {
 }
 
 .team-assignment {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.82);
   border-radius: 16px;
   padding: 18px;
   margin-bottom: 20px;
+  border: 1px solid rgba(31, 42, 68, 0.12);
 }
 
 .team-assignment h3 {
   margin-top: 0;
   margin-bottom: 14px;
-  color: white;
+  color: #1f2a44;
   text-align: center;
 }
 
@@ -1134,11 +1611,12 @@ button[type="submit"]:hover {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.9);
   border-radius: 12px;
   padding: 10px 12px;
-  color: white;
+  color: #1f2a44;
   cursor: pointer;
+  border: 1px solid rgba(31, 42, 68, 0.1);
 }
 
 .session-player-item input {
@@ -1152,8 +1630,15 @@ button[type="submit"]:hover {
 }
 
 .session-player-item span {
-  opacity: 0.8;
+  opacity: 1;
+  color: rgba(31, 42, 68, 0.82);
   font-size: 0.9rem;
+}
+
+.team-assignment .empty-state {
+  color: #1f2a44;
+  background: rgba(255, 255, 255, 0.88);
+  border-radius: 12px;
 }
 
 @media (max-width: 900px) {
@@ -1166,6 +1651,10 @@ button[type="submit"]:hover {
   }
 
   .team-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .team-roster-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1195,6 +1684,73 @@ button[type="submit"]:hover {
     padding: 14px;
   }
 
+  .team-tabs {
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 2px 2px 8px;
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .team-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .team-tab-button {
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+    scroll-snap-align: start;
+    font-size: 0.85rem;
+  }
+
+  .team-roster-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .team-roster-header .btn {
+    width: 100%;
+    margin: 0;
+  }
+
+  .team-roster-card {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .team-roster-card > .team-inline-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .team-roster-card .inline-action-form {
+    margin: 0;
+  }
+
+  .team-roster-card > .team-inline-actions > .team-action-btn,
+  .team-roster-card
+    > .team-inline-actions
+    > .inline-action-form
+    .team-action-btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    height: 42px;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
   .team-panel .form-buttons {
     display: grid;
     grid-template-columns: 1fr;
@@ -1212,13 +1768,31 @@ button[type="submit"]:hover {
   }
 
   .team-summary-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin-bottom: 14px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .team-stat-section {
+    margin-bottom: 18px;
+  }
+
+  .team-stat-title {
+    margin-bottom: 8px;
+    font-size: 1rem;
+  }
+
+  .team-summary-card {
+    min-width: 0;
+    padding: 12px 8px;
+  }
+
+  .team-summary-label {
+    font-size: 0.68rem;
+    line-height: 1.3;
   }
 
   .team-summary-card strong {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
 
   .position-filter-buttons {
@@ -1393,5 +1967,84 @@ button[type="submit"]:hover {
     margin: 15px 0;
     font-size: 0.95em;
     text-align: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .team-match-actions > form,
+  .match-history-actions > form {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .team-match-actions > .btn,
+  .team-match-actions > form > .btn,
+  .match-history-actions > .btn,
+  .match-history-actions > form > .btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: auto;
+    margin: 0;
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 900px) {
+  .exercises-grid .card-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-direction: initial;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .exercises-grid .card-actions > .btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    min-height: 44px;
+    height: auto;
+    margin: 0;
+    padding: 8px 6px;
+    box-sizing: border-box;
+    font-size: 0.82rem;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  .exercises-grid .card-actions > .btn-delete {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .planning-ai-actions > .btn {
+    flex: 0 0 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    margin: 0;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 600px) {
+  .team-session-actions > form {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+
+  .team-session-actions > .btn,
+  .team-session-actions > form > .btn {
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    margin: 0;
+    box-sizing: border-box;
   }
 }

@@ -3,13 +3,28 @@
   let selectedExercises = [];
   let allPlayers = [];
   let assignedPlayers = [];
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlTeamId = Number(urlParams.get("equipe_id") || 0);
   let currentFilter = "Toutes";
   let currentDate = document.getElementById("session-date").value;
+  const teamSelect = document.getElementById("session-team");
+  let currentTeamId = Number(teamSelect?.value || urlTeamId || 0);
+  let draggedExerciseId = null;
+  let aiProposal = null;
+  let mobileSelectedOpen = false;
+  const mobileSelectedToggle = document.getElementById(
+    "mobile-selected-toggle",
+  );
+  const mobileSelectedClose = document.getElementById("mobile-selected-close");
+  const mobileSelectedCloseBottom = document.getElementById(
+    "mobile-selected-close-bottom",
+  );
+  const mobileSelectedCount = document.getElementById("mobile-selected-count");
   const filters = {
     search: "",
     favoritesOnly: false,
     durationMax: "",
-    trainingFormat: "tous",
+    trainingFormat: "individuel",
     sort: "favoris",
   };
   const preferredCategories = [
@@ -24,6 +39,33 @@
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
+  }
+
+  function buildApiUrl(api, extraParams = {}) {
+    const params = new URLSearchParams({
+      api,
+      equipe_id: String(currentTeamId),
+      ...extraParams,
+    });
+    return `seances.php?${params.toString()}`;
+  }
+
+  function withTeamBody(body) {
+    if ((!currentTeamId || currentTeamId <= 0) && teamSelect) {
+      currentTeamId = Number(teamSelect.value || 0);
+    }
+    if (!currentTeamId || currentTeamId <= 0) {
+      currentTeamId = Number(urlTeamId || 0);
+    }
+    body.set("equipe_id", String(currentTeamId));
+    return body;
+  }
+
+  function updatePlannerUrl() {
+    const params = new URLSearchParams(window.location.search);
+    params.set("date", currentDate);
+    params.set("equipe_id", String(currentTeamId));
+    window.history.replaceState({}, "", `seances.php?${params.toString()}`);
   }
 
   function getExerciseCategories() {
@@ -95,13 +137,7 @@
         const trainingFormat = String(
           exercise.format_entrainement || "mixte",
         ).trim();
-        if (filters.trainingFormat === "mixte" && trainingFormat !== "mixte") {
-          return false;
-        }
-
         if (
-          (filters.trainingFormat === "individuel" ||
-            filters.trainingFormat === "groupe") &&
           trainingFormat !== filters.trainingFormat &&
           trainingFormat !== "mixte"
         ) {
@@ -171,9 +207,7 @@
     if (filters.favoritesOnly) {
       activeFilters.push("favoris uniquement");
     }
-    if (filters.trainingFormat !== "tous") {
-      activeFilters.push(`format: ${filters.trainingFormat}`);
-    }
+    activeFilters.push(`format: ${filters.trainingFormat} + mixte`);
     if (filters.durationMax) {
       activeFilters.push(`duree <= ${filters.durationMax} min`);
     }
@@ -188,7 +222,7 @@
   // Charger les exercices depuis l'API
   async function loadExercises() {
     try {
-      const response = await fetch("seances.php?api=exercices");
+      const response = await fetch(buildApiUrl("exercices"));
       allExercises = await response.json();
       syncCategoryControls();
       renderExercises();
@@ -203,7 +237,7 @@
   async function loadSelectedExercises() {
     try {
       const response = await fetch(
-        `seances.php?api=seance&date=${currentDate}`,
+        buildApiUrl("seance", { date: currentDate }),
       );
       selectedExercises = await response.json();
       renderSelectedExercises();
@@ -215,7 +249,7 @@
 
   async function loadPlayers() {
     try {
-      const response = await fetch("seances.php?api=joueurs");
+      const response = await fetch(buildApiUrl("joueurs"));
       allPlayers = await response.json();
       renderSessionPlayers();
     } catch (error) {
@@ -228,7 +262,7 @@
   async function loadAssignedPlayers() {
     try {
       const response = await fetch(
-        `seances.php?api=joueurs_seance&date=${encodeURIComponent(currentDate)}`,
+        buildApiUrl("joueurs_seance", { date: currentDate }),
       );
       assignedPlayers = await response.json();
       renderSessionPlayers();
@@ -296,15 +330,20 @@
     const ul = document.getElementById("selected-exercises");
     if (selectedExercises.length === 0) {
       ul.innerHTML = '<li class="empty-state">Aucun exercice sélectionné</li>';
+      updateMobileSelectedUi();
       return;
     }
     ul.innerHTML = selectedExercises
       .map(
         (ex) => `
-            <li class="selected-exercise-card">
+            <li class="selected-exercise-card" draggable="true" data-seance-exercice-id="${ex.seance_exercice_id}" data-exercice-id="${ex.id}">
             <div class="exercise-card" data-id="${ex.id}">
                 <div class="card-inner">
                     <div class="card-front">
+                        <div class="selected-exercise-meta">
+                            <span class="drag-handle" title="Glisser pour réordonner">⇅</span>
+                            <span class="exercise-order">${Number(ex.ordre) || 0}</span>
+                        </div>
                         <div class="exercise-title">${ex.nom}</div>
                         <div class="exercise-category">${ex.categorie}</div>
                         <button class="btn btn-delete remove-btn" title="Retirer" onclick="removeExercise(${
@@ -329,6 +368,141 @@
         </li>`,
       )
       .join("");
+    updateMobileSelectedUi();
+  }
+
+  function isMobileViewport() {
+    return window.matchMedia("(max-width: 768px)").matches;
+  }
+
+  function updateMobileSelectedUi() {
+    if (mobileSelectedCount) {
+      mobileSelectedCount.textContent = String(selectedExercises.length);
+    }
+
+    if (!mobileSelectedToggle) {
+      return;
+    }
+
+    mobileSelectedToggle.setAttribute(
+      "aria-label",
+      `Voir la seance (${selectedExercises.length} exercice(s))`,
+    );
+    mobileSelectedToggle.setAttribute(
+      "aria-expanded",
+      mobileSelectedOpen ? "true" : "false",
+    );
+  }
+
+  function setMobileSelectedOpen(shouldOpen) {
+    const canUseDrawer = isMobileViewport() && !!mobileSelectedToggle;
+
+    mobileSelectedOpen = canUseDrawer ? Boolean(shouldOpen) : false;
+    document.body.classList.toggle("mobile-selected-open", mobileSelectedOpen);
+    updateMobileSelectedUi();
+  }
+
+  function initMobileSelectedDrawer() {
+    if (!mobileSelectedToggle || !mobileSelectedClose) {
+      return;
+    }
+
+    mobileSelectedToggle.addEventListener("click", function () {
+      setMobileSelectedOpen(true);
+    });
+
+    mobileSelectedClose.addEventListener("click", function () {
+      setMobileSelectedOpen(false);
+    });
+
+    if (mobileSelectedCloseBottom) {
+      mobileSelectedCloseBottom.addEventListener("click", function () {
+        setMobileSelectedOpen(false);
+      });
+    }
+
+    window.addEventListener("resize", function () {
+      if (!isMobileViewport()) {
+        setMobileSelectedOpen(false);
+      } else {
+        updateMobileSelectedUi();
+      }
+    });
+
+    setMobileSelectedOpen(false);
+  }
+
+  async function persistSelectedExercisesOrder() {
+    const list = document.getElementById("selected-exercises");
+    const orderedIds = Array.from(
+      list.querySelectorAll(".selected-exercise-card[data-seance-exercice-id]"),
+    ).map((item) => Number(item.dataset.seanceExerciceId));
+
+    if (orderedIds.length <= 1) {
+      return;
+    }
+
+    const body = new URLSearchParams();
+    body.set("action", "reordonner_exercices");
+    body.set("date", currentDate);
+    orderedIds.forEach((id) => body.append("ordered_ids[]", id));
+    withTeamBody(body);
+
+    const response = await fetch("seances.php", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: body.toString(),
+    });
+    const result = await response.json();
+
+    if (!result.success) {
+      alert(result.message || "Erreur lors du reordonnancement.");
+      await loadSelectedExercises();
+      return;
+    }
+
+    selectedExercises = orderedIds
+      .map((orderedId, index) => {
+        const exercise = selectedExercises.find(
+          (item) => Number(item.seance_exercice_id) === orderedId,
+        );
+        if (!exercise) return null;
+        return { ...exercise, ordre: index + 1 };
+      })
+      .filter(Boolean);
+
+    renderSelectedExercises();
+    updateSummary();
+  }
+
+  function moveSelectedExerciseBefore(draggedId, targetId) {
+    if (!draggedId || !targetId || draggedId === targetId) {
+      return false;
+    }
+
+    const fromIndex = selectedExercises.findIndex(
+      (exercise) => Number(exercise.seance_exercice_id) === draggedId,
+    );
+    const targetIndex = selectedExercises.findIndex(
+      (exercise) => Number(exercise.seance_exercice_id) === targetId,
+    );
+
+    if (fromIndex === -1 || targetIndex === -1) {
+      return false;
+    }
+
+    const reordered = [...selectedExercises];
+    const [movedExercise] = reordered.splice(fromIndex, 1);
+    const insertIndex = fromIndex < targetIndex ? targetIndex - 1 : targetIndex;
+    reordered.splice(insertIndex, 0, movedExercise);
+
+    selectedExercises = reordered.map((exercise, index) => ({
+      ...exercise,
+      ordre: index + 1,
+    }));
+    renderSelectedExercises();
+    updateSummary();
+    return true;
   }
 
   function renderSessionPlayers() {
@@ -373,6 +547,7 @@
     body.set("action", "enregistrer_joueurs_seance");
     body.set("date", currentDate);
     checkedPlayers.forEach((id) => body.append("joueurs[]", id));
+    withTeamBody(body);
 
     const response = await fetch("seances.php", {
       method: "POST",
@@ -399,7 +574,7 @@
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `action=ajouter_exercice&exercice_id=${exerciceId}&date=${encodeURIComponent(
         currentDate,
-      )}`,
+      )}&equipe_id=${encodeURIComponent(String(currentTeamId))}`,
     });
     const text = await response.text();
     let result;
@@ -413,6 +588,9 @@
       await loadSelectedExercises();
       renderExercises();
       updateSummary();
+      if (isMobileViewport()) {
+        setMobileSelectedOpen(true);
+      }
     } else {
       alert(result.message || "Erreur lors de l'ajout.");
     }
@@ -437,7 +615,7 @@
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: `action=supprimer_exercice&exercice_id=${exerciceId}&date=${encodeURIComponent(
         currentDate,
-      )}`,
+      )}&equipe_id=${encodeURIComponent(String(currentTeamId))}`,
     });
     const result = await response.json();
     if (result.success) {
@@ -457,6 +635,173 @@
     updateResultsSummary(getFilteredExercises());
   }
 
+  function renderAiProposalPreview() {
+    const preview = document.getElementById("ai-session-preview");
+    const feedback = document.getElementById("ai-session-feedback");
+    const applyBtn = document.getElementById("apply-ai-session");
+
+    if (!preview || !feedback || !applyBtn) {
+      return;
+    }
+
+    if (!aiProposal || !Array.isArray(aiProposal.exercises)) {
+      preview.innerHTML = "";
+      feedback.textContent = "";
+      applyBtn.disabled = true;
+      return;
+    }
+
+    preview.innerHTML = aiProposal.exercises
+      .map((exercise, index) => {
+        const duration = Number(exercise.duree) || 0;
+        const category = exercise.categorie || "Sans categorie";
+        return `<li>${index + 1}. ${exercise.nom} <small>(${category}, ${duration} min)</small></li>`;
+      })
+      .join("");
+
+    const notes = aiProposal.notes ? ` ${aiProposal.notes}` : "";
+    feedback.textContent = `Proposition automatique: ${aiProposal.exercises.length} exercice(s), ${aiProposal.total_duration} min.${notes}`;
+    applyBtn.disabled = aiProposal.exercises.length === 0;
+  }
+
+  async function generateAiSessionProposal() {
+    const feedback = document.getElementById("ai-session-feedback");
+    const generateBtn = document.getElementById("generate-ai-session");
+
+    if (!feedback || !generateBtn) {
+      return;
+    }
+
+    feedback.textContent = "Generation automatique en cours...";
+    generateBtn.disabled = true;
+
+    const countEchauffement =
+      document.getElementById("auto-count-echauffement")?.value || "3";
+    const countVitesse =
+      document.getElementById("auto-count-vitesse")?.value || "2";
+    const countEndurance =
+      document.getElementById("auto-count-endurance")?.value || "2";
+    const countAgilite =
+      document.getElementById("auto-count-agilite")?.value || "2";
+    const formatSouhaite =
+      document.getElementById("auto-format-souhaite")?.value || "individuel";
+
+    const body = new URLSearchParams();
+    body.set("action", "proposer_seance_ia");
+    body.set("date", currentDate);
+    body.set("count_echauffement", countEchauffement);
+    body.set("count_vitesse", countVitesse);
+    body.set("count_endurance", countEndurance);
+    body.set("count_agilite", countAgilite);
+    body.set("format_souhaite", formatSouhaite);
+    withTeamBody(body);
+
+    try {
+      const response = await fetch("seances.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+      const result = await response.json();
+
+      if (!result.success) {
+        aiProposal = null;
+        renderAiProposalPreview();
+        feedback.textContent =
+          result.message ||
+          "Impossible de generer une proposition automatique.";
+        return;
+      }
+
+      aiProposal = {
+        exercise_ids: result.exercise_ids || [],
+        exercises: result.exercises || [],
+        total_duration: Number(result.total_duration) || 0,
+        notes: result.notes || "",
+      };
+      renderAiProposalPreview();
+    } catch (error) {
+      aiProposal = null;
+      renderAiProposalPreview();
+      feedback.textContent = "Erreur reseau lors de la generation automatique.";
+    } finally {
+      generateBtn.disabled = false;
+    }
+  }
+
+  async function applyAiSessionProposal() {
+    const feedback = document.getElementById("ai-session-feedback");
+    const applyBtn = document.getElementById("apply-ai-session");
+    if (!feedback || !aiProposal || !Array.isArray(aiProposal.exercise_ids)) {
+      return;
+    }
+
+    if (aiProposal.exercise_ids.length === 0) {
+      feedback.textContent = "Aucune proposition a inserer.";
+      return;
+    }
+
+    const body = new URLSearchParams();
+    body.set("action", "inserer_proposition_ia");
+    body.set("date", currentDate);
+    aiProposal.exercise_ids.forEach((id) => body.append("exercise_ids[]", id));
+    withTeamBody(body);
+    feedback.textContent = "Insertion de la proposition en cours...";
+    if (applyBtn) {
+      applyBtn.disabled = true;
+    }
+
+    try {
+      const response = await fetch("seances.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+      });
+
+      const raw = await response.text();
+      let result;
+      try {
+        result = JSON.parse(raw);
+      } catch (error) {
+        const preview = String(raw || "")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 160);
+        feedback.textContent = `Reponse serveur invalide lors de l'insertion.${preview ? ` Détail: ${preview}` : ""}`;
+        console.error("Insertion proposition: reponse non JSON", raw);
+        return;
+      }
+
+      if (!result.success) {
+        feedback.textContent =
+          result.message || "Erreur lors de l'insertion de la proposition.";
+        return;
+      }
+
+      if ((result.inserted_count || 0) === 0) {
+        feedback.textContent =
+          result.message ||
+          "Aucun exercice insere: cette proposition est deja presente pour l'equipe selectionnee.";
+        return;
+      }
+
+      feedback.textContent = `${result.inserted_count || 0} exercice(s) ajoute(s) depuis la proposition automatique.`;
+      aiProposal = null;
+      renderAiProposalPreview();
+      await loadSelectedExercises();
+      renderExercises();
+      updateSummary();
+    } catch (error) {
+      feedback.textContent =
+        "Erreur reseau lors de l'insertion de la proposition.";
+      console.error("Insertion proposition: erreur reseau", error);
+    } finally {
+      if (applyBtn) {
+        applyBtn.disabled = false;
+      }
+    }
+  }
+
   function formatTrainingType(value) {
     if (value === "individuel") {
       return "Individuel";
@@ -471,12 +816,13 @@
     filters.search = "";
     filters.favoritesOnly = false;
     filters.durationMax = "";
-    filters.trainingFormat = "tous";
+    filters.trainingFormat = "individuel";
     filters.sort = "favoris";
     currentFilter = "Toutes";
 
     document.getElementById("exercise-search").value = "";
-    document.getElementById("exercise-training-format-select").value = "tous";
+    document.getElementById("exercise-training-format-select").value =
+      "individuel";
     document.getElementById("exercise-sort-select").value = "favoris";
     document.getElementById("exercise-duration-max").value = "";
     document.getElementById("exercise-favorites-only").checked = false;
@@ -489,9 +835,20 @@
     .getElementById("session-date")
     .addEventListener("change", function () {
       currentDate = this.value;
+      updatePlannerUrl();
       loadSelectedExercises();
       loadAssignedPlayers();
     });
+
+  teamSelect?.addEventListener("change", function () {
+    currentTeamId = Number(this.value || 0);
+    aiProposal = null;
+    renderAiProposalPreview();
+    updatePlannerUrl();
+    loadPlayers();
+    loadSelectedExercises();
+    loadAssignedPlayers();
+  });
 
   document
     .getElementById("session-players")
@@ -513,6 +870,82 @@
       )
         return;
       card.classList.toggle("flipped");
+    });
+
+  document
+    .getElementById("selected-exercises")
+    .addEventListener("dragstart", function (event) {
+      const item = event.target.closest(".selected-exercise-card");
+      if (!item) return;
+
+      draggedExerciseId = Number(item.dataset.seanceExerciceId);
+      item.classList.add("dragging");
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "move";
+      }
+    });
+
+  document
+    .getElementById("selected-exercises")
+    .addEventListener("dragend", function (event) {
+      const item = event.target.closest(".selected-exercise-card");
+      if (item) {
+        item.classList.remove("dragging");
+      }
+      document
+        .querySelectorAll(".selected-exercise-card.drag-over")
+        .forEach((card) => card.classList.remove("drag-over"));
+      draggedExerciseId = null;
+    });
+
+  document
+    .getElementById("selected-exercises")
+    .addEventListener("dragover", function (event) {
+      const item = event.target.closest(".selected-exercise-card");
+      if (!item || draggedExerciseId === null) return;
+
+      event.preventDefault();
+      if (event.dataTransfer) {
+        event.dataTransfer.dropEffect = "move";
+      }
+      document
+        .querySelectorAll(".selected-exercise-card.drag-over")
+        .forEach((card) => {
+          if (card !== item) {
+            card.classList.remove("drag-over");
+          }
+        });
+      if (Number(item.dataset.seanceExerciceId) !== draggedExerciseId) {
+        item.classList.add("drag-over");
+      }
+    });
+
+  document
+    .getElementById("selected-exercises")
+    .addEventListener("dragleave", function (event) {
+      const item = event.target.closest(".selected-exercise-card");
+      if (item) {
+        item.classList.remove("drag-over");
+      }
+    });
+
+  document
+    .getElementById("selected-exercises")
+    .addEventListener("drop", async function (event) {
+      const item = event.target.closest(".selected-exercise-card");
+      if (!item || draggedExerciseId === null) return;
+
+      event.preventDefault();
+      const targetId = Number(item.dataset.seanceExerciceId);
+      document
+        .querySelectorAll(".selected-exercise-card.drag-over")
+        .forEach((card) => card.classList.remove("drag-over"));
+
+      const moved = moveSelectedExerciseBefore(draggedExerciseId, targetId);
+      draggedExerciseId = null;
+      if (moved) {
+        await persistSelectedExercisesOrder();
+      }
     });
 
   // ✅ Délégation pour le flip sur les cartes disponibles
@@ -577,12 +1010,22 @@
     .getElementById("reset-exercise-filters")
     .addEventListener("click", resetFilters);
 
+  document
+    .getElementById("generate-ai-session")
+    ?.addEventListener("click", generateAiSessionProposal);
+
+  document
+    .getElementById("apply-ai-session")
+    ?.addEventListener("click", applyAiSessionProposal);
+
   // Pour accès global depuis HTML inline
   window.addExercise = addExercise;
   window.removeExercise = removeExercise;
   window.toggleExerciseFavorite = toggleExerciseFavorite;
+  initMobileSelectedDrawer();
 
   // Initialisation
+  updatePlannerUrl();
   loadExercises().then(loadSelectedExercises);
   loadPlayers().then(loadAssignedPlayers);
 

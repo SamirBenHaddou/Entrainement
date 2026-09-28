@@ -157,7 +157,7 @@ if (!$joueur) {
 
 $selectedTeamId = (int) $joueur['equipe_id'];
 
-$saisonsStmt = $pdo->prepare('SELECT id, nom FROM saisons WHERE user_id = ? AND equipe_id = ? ORDER BY created_at DESC, id DESC');
+$saisonsStmt = $pdo->prepare('SELECT id, nom, date_debut, date_fin FROM saisons WHERE user_id = ? AND equipe_id = ? ORDER BY created_at DESC, id DESC');
 $saisonsStmt->execute([$userId, $selectedTeamId]);
 $saisons = $saisonsStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -184,6 +184,17 @@ $selectedSeasonId = isset($_GET['saison_id']) ? (int) $_GET['saison_id'] : 0;
 if ($selectedSeasonId > 0 && !in_array($selectedSeasonId, $knownSeasonIds, true)) {
     $selectedSeasonId = 0;
 }
+
+$selectedSeason = null;
+foreach ($saisons as $saison) {
+    if ((int) $saison['id'] === $selectedSeasonId) {
+        $selectedSeason = $saison;
+        break;
+    }
+}
+
+$selectedSeasonStart = $selectedSeason['date_debut'] ?? null;
+$selectedSeasonEnd = $selectedSeason['date_fin'] ?? null;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'mettre_a_jour_joueur') {
     $nom = trim($_POST['nom'] ?? '');
@@ -217,10 +228,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'mettr
 }
 
 $seancesSql =
-    'SELECT date_seance, intitule, commentaire
-     FROM joueur_seances
-     WHERE user_id = :user_id AND joueur_id = :joueur_id' . ($selectedSeasonId > 0 ? ' AND saison_id = :season_id' : '') . '
-     ORDER BY date_seance DESC, id DESC
+    'SELECT historique.date_seance, historique.intitule, historique.commentaire, historique.type_source
+     FROM (
+        SELECT
+            js.date_seance,
+            js.intitule,
+            js.commentaire,
+            "memoire" AS type_source,
+            js.id,
+            js.created_at
+        FROM joueur_seances js
+        WHERE js.user_id = :user_id
+          AND js.joueur_id = :joueur_id' . ($selectedSeasonId > 0 ? ' AND js.saison_id = :season_id' : '') . '
+
+        UNION ALL
+
+        SELECT
+            s.date_seance,
+            "Seance planifiee" AS intitule,
+            CONCAT(COALESCE(ex_stats.nb_exercices, 0), " exercice(s) planifie(s)") AS commentaire,
+            "planifiee" AS type_source,
+            sj.id,
+            sj.created_at
+        FROM seance_joueurs sj
+        JOIN seances s ON s.id = sj.seance_id
+        LEFT JOIN (
+            SELECT seance_id, COUNT(*) AS nb_exercices
+            FROM seance_exercices
+            GROUP BY seance_id
+        ) ex_stats ON ex_stats.seance_id = s.id
+        WHERE s.user_id = :user_id_planifie
+          AND sj.joueur_id = :joueur_id_planifie
+     ) historique
+     ORDER BY historique.date_seance DESC, historique.created_at DESC, historique.id DESC
      LIMIT 10';
 $seancesStmt = $pdo->prepare($seancesSql);
 $seancesStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
@@ -228,34 +268,76 @@ $seancesStmt->bindValue(':joueur_id', $joueurId, PDO::PARAM_INT);
 if ($selectedSeasonId > 0) {
     $seancesStmt->bindValue(':season_id', $selectedSeasonId, PDO::PARAM_INT);
 }
+$seancesStmt->bindValue(':user_id_planifie', $userId, PDO::PARAM_INT);
+$seancesStmt->bindValue(':joueur_id_planifie', $joueurId, PDO::PARAM_INT);
 $seancesStmt->execute();
 $seances = $seancesStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $playerMatchSummarySql =
     'SELECT
-        COALESCE(SUM(matchs_joues), 0) AS matchs_joues,
-        COALESCE(SUM(buts), 0) AS buts,
-        COALESCE(SUM(passes_decisives), 0) AS passes_decisives
-     FROM joueur_matchs
-     WHERE user_id = :user_id AND joueur_id = :joueur_id' . ($selectedSeasonId > 0 ? ' AND saison_id = :season_id' : '');
+        COALESCE(SUM(jm.matchs_joues), 0) AS matchs_joues,
+        COALESCE(SUM(jm.buts), 0) AS buts,
+        COALESCE(SUM(jm.passes_decisives), 0) AS passes_decisives
+     FROM joueur_matchs jm
+     JOIN equipe_matchs em ON em.id = jm.match_id AND em.user_id = jm.user_id
+     WHERE jm.user_id = :user_id
+       AND jm.joueur_id = :joueur_id
+       AND em.equipe_id = :team_id
+       AND em.statut = "joue"' . ($selectedSeasonId > 0 ? ' AND em.saison_id = :season_id' : '');
 $playerMatchSummaryStmt = $pdo->prepare($playerMatchSummarySql);
 $playerMatchSummaryStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
 $playerMatchSummaryStmt->bindValue(':joueur_id', $joueurId, PDO::PARAM_INT);
+$playerMatchSummaryStmt->bindValue(':team_id', $selectedTeamId, PDO::PARAM_INT);
 if ($selectedSeasonId > 0) {
     $playerMatchSummaryStmt->bindValue(':season_id', $selectedSeasonId, PDO::PARAM_INT);
 }
 $playerMatchSummaryStmt->execute();
 $playerMatchSummary = $playerMatchSummaryStmt->fetch(PDO::FETCH_ASSOC) ?: [];
 
+$seasonSqlFilterPlannedSeances = '';
+if ($selectedSeasonId > 0) {
+    if (!empty($selectedSeasonStart)) {
+        $seasonSqlFilterPlannedSeances .= ' AND s.date_seance >= :season_start_planifiee';
+    }
+    if (!empty($selectedSeasonEnd)) {
+        $seasonSqlFilterPlannedSeances .= ' AND s.date_seance <= :season_end_planifiee';
+    }
+}
+
 $playerSeanceSummarySql =
-    'SELECT COUNT(*) AS seances
-     FROM joueur_seances
-     WHERE user_id = :user_id AND joueur_id = :joueur_id' . ($selectedSeasonId > 0 ? ' AND saison_id = :season_id' : '');
+    'SELECT
+        COALESCE(js_stats.nb_seances_memoire, 0) + COALESCE(sj_stats.nb_seances_planifiees, 0) AS seances
+     FROM (
+         SELECT 1 AS id
+     ) seed
+     LEFT JOIN (
+         SELECT COUNT(*) AS nb_seances_memoire
+         FROM joueur_seances
+         WHERE user_id = :user_id
+           AND joueur_id = :joueur_id' . ($selectedSeasonId > 0 ? ' AND saison_id = :season_id' : '') . '
+     ) js_stats ON js_stats.nb_seances_memoire IS NOT NULL
+     LEFT JOIN (
+         SELECT COUNT(*) AS nb_seances_planifiees
+         FROM seance_joueurs sj
+         JOIN seances s ON s.id = sj.seance_id
+         WHERE s.user_id = :user_id_planifie
+           AND sj.joueur_id = :joueur_id_planifie' . $seasonSqlFilterPlannedSeances . '
+     ) sj_stats ON sj_stats.nb_seances_planifiees IS NOT NULL';
 $playerSeanceSummaryStmt = $pdo->prepare($playerSeanceSummarySql);
 $playerSeanceSummaryStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
 $playerSeanceSummaryStmt->bindValue(':joueur_id', $joueurId, PDO::PARAM_INT);
 if ($selectedSeasonId > 0) {
     $playerSeanceSummaryStmt->bindValue(':season_id', $selectedSeasonId, PDO::PARAM_INT);
+}
+$playerSeanceSummaryStmt->bindValue(':user_id_planifie', $userId, PDO::PARAM_INT);
+$playerSeanceSummaryStmt->bindValue(':joueur_id_planifie', $joueurId, PDO::PARAM_INT);
+$seasonStartPlanned = is_string($selectedSeasonStart) ? trim($selectedSeasonStart) : '';
+$seasonEndPlanned = is_string($selectedSeasonEnd) ? trim($selectedSeasonEnd) : '';
+if ($selectedSeasonId > 0 && $seasonStartPlanned !== '') {
+    $playerSeanceSummaryStmt->bindValue(':season_start_planifiee', $seasonStartPlanned);
+}
+if ($selectedSeasonId > 0 && $seasonEndPlanned !== '') {
+    $playerSeanceSummaryStmt->bindValue(':season_end_planifiee', $seasonEndPlanned);
 }
 $playerSeanceSummaryStmt->execute();
 
@@ -265,11 +347,11 @@ $playerStats = [
     'passes' => (int) ($playerMatchSummary['passes_decisives'] ?? 0),
     'seances' => (int) $playerSeanceSummaryStmt->fetchColumn(),
     'contributions' => 0,
-    'ratio' => '0.00',
+    'buts_par_match' => '0.00',
 ];
 $playerStats['contributions'] = $playerStats['buts'] + $playerStats['passes'];
 if ($playerStats['matchs'] > 0) {
-    $playerStats['ratio'] = number_format($playerStats['contributions'] / $playerStats['matchs'], 2, '.', '');
+    $playerStats['buts_par_match'] = number_format($playerStats['buts'] / $playerStats['matchs'], 2, '.', '');
 }
 
 $joueurPostes = parse_positions($joueur['poste'] ?? null);
@@ -331,8 +413,8 @@ $status = $_GET['status'] ?? null;
                 <strong><?= $playerStats['contributions'] ?></strong>
             </article>
             <article class="team-summary-card">
-                <span class="team-summary-label">Contrib. par match</span>
-                <strong><?= htmlspecialchars($playerStats['ratio']) ?></strong>
+                <span class="team-summary-label">Buts par match</span>
+                <strong><?= htmlspecialchars($playerStats['buts_par_match']) ?></strong>
             </article>
             <article class="team-summary-card">
                 <span class="team-summary-label">Seances</span>
@@ -390,7 +472,7 @@ $status = $_GET['status'] ?? null;
         </section>
 
         <section class="team-panel">
-            <h2 class="section-title">Dernieres seances <?= $selectedSeasonId > 0 ? 'de la saison' : '' ?></h2>
+            <h2 class="section-title">Dernieres seances</h2>
             <?php if (count($seances) === 0): ?>
                 <div class="empty-state team-empty">Aucune seance enregistree.</div>
             <?php else: ?>
@@ -399,6 +481,7 @@ $status = $_GET['status'] ?? null;
                         <article class="team-feed-card">
                             <strong><?= htmlspecialchars($seance['date_seance']) ?></strong>
                             <span><?= htmlspecialchars($seance['intitule']) ?></span>
+                            <span><?= htmlspecialchars(($seance['type_source'] ?? 'memoire') === 'planifiee' ? 'Source: planificateur' : 'Source: fiche joueur') ?></span>
                             <p><?= htmlspecialchars($seance['commentaire'] ?: 'Aucun commentaire.') ?></p>
                         </article>
                     <?php endforeach; ?>

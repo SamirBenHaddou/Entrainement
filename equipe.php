@@ -361,6 +361,17 @@ if ($selectedSeasonId > 0 && !in_array($selectedSeasonId, $knownSeasonIds, true)
     $selectedSeasonId = 0;
 }
 
+$selectedSeason = null;
+foreach ($saisons as $saison) {
+    if ((int) $saison['id'] === $selectedSeasonId) {
+        $selectedSeason = $saison;
+        break;
+    }
+}
+
+$selectedSeasonStart = $selectedSeason['date_debut'] ?? null;
+$selectedSeasonEnd = $selectedSeason['date_fin'] ?? null;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
     $postedTeamId = isset($_POST['equipe_id']) ? (int) $_POST['equipe_id'] : $selectedTeamId;
@@ -759,10 +770,17 @@ $stmt->execute([$userId, $selectedTeamId]);
 $joueurs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $seasonSqlFilterSeances = $selectedSeasonId > 0 ? ' AND saison_id = :season_id_seances' : '';
-$seasonSqlFilterMatchs = $selectedSeasonId > 0 ? ' AND saison_id = :season_id_matchs' : '';
-$seancesExpr = $selectedSeasonId > 0
-    ? 'COALESCE(js_stats.seances_effectuees, 0)'
-    : 'COALESCE(js_stats.seances_effectuees, 0) + COALESCE(sj_stats.seances_planifiees, 0)';
+$seasonSqlFilterMatchs = $selectedSeasonId > 0 ? ' AND em.saison_id = :season_id_matchs' : '';
+$seasonSqlFilterPlannedSeances = '';
+if ($selectedSeasonId > 0) {
+    if (!empty($selectedSeasonStart)) {
+        $seasonSqlFilterPlannedSeances .= ' AND s.date_seance >= :season_start_planifiee';
+    }
+    if (!empty($selectedSeasonEnd)) {
+        $seasonSqlFilterPlannedSeances .= ' AND s.date_seance <= :season_end_planifiee';
+    }
+}
+$seancesExpr = 'COALESCE(js_stats.seances_effectuees, 0) + COALESCE(sj_stats.seances_planifiees, 0)';
 
 $statsStmt = $pdo->prepare(
     'SELECT
@@ -784,18 +802,21 @@ $statsStmt = $pdo->prepare(
           SELECT sj.joueur_id, s.user_id, COUNT(*) AS seances_planifiees
           FROM seance_joueurs sj
           JOIN seances s ON s.id = sj.seance_id
+          WHERE s.user_id = :sj_user_id' . $seasonSqlFilterPlannedSeances . '
           GROUP BY sj.joueur_id, s.user_id
       ) sj_stats ON sj_stats.joueur_id = j.id AND sj_stats.user_id = j.user_id
      LEFT JOIN (
         SELECT
-            joueur_id,
-            user_id,
+                        jm.joueur_id,
+                        jm.user_id,
             SUM(matchs_joues) AS matchs_joues,
-            SUM(buts) AS buts,
-            SUM(passes_decisives) AS passes_decisives
-        FROM joueur_matchs
-        WHERE 1 = 1' . $seasonSqlFilterMatchs . '
-        GROUP BY joueur_id, user_id
+                        SUM(jm.buts) AS buts,
+                        SUM(jm.passes_decisives) AS passes_decisives
+                FROM joueur_matchs jm
+                JOIN equipe_matchs em ON em.id = jm.match_id AND em.user_id = jm.user_id
+                WHERE em.equipe_id = :jm_team_id
+                    AND em.statut = "joue"' . $seasonSqlFilterMatchs . '
+                GROUP BY jm.joueur_id, jm.user_id
      ) jm_stats ON jm_stats.joueur_id = j.id AND jm_stats.user_id = j.user_id
     WHERE j.user_id = :stats_user_id AND j.equipe_id = :stats_team_id
      ORDER BY j.nom ASC'
@@ -806,6 +827,16 @@ if ($selectedSeasonId > 0) {
     $statsStmt->bindValue(':season_id_seances', $selectedSeasonId, PDO::PARAM_INT);
     $statsStmt->bindValue(':season_id_matchs', $selectedSeasonId, PDO::PARAM_INT);
 }
+$statsStmt->bindValue(':sj_user_id', $userId, PDO::PARAM_INT);
+$seasonStartPlanned = is_string($selectedSeasonStart) ? trim($selectedSeasonStart) : '';
+$seasonEndPlanned = is_string($selectedSeasonEnd) ? trim($selectedSeasonEnd) : '';
+if ($selectedSeasonId > 0 && $seasonStartPlanned !== '') {
+    $statsStmt->bindValue(':season_start_planifiee', $seasonStartPlanned);
+}
+if ($selectedSeasonId > 0 && $seasonEndPlanned !== '') {
+    $statsStmt->bindValue(':season_end_planifiee', $seasonEndPlanned);
+}
+$statsStmt->bindValue(':jm_team_id', $selectedTeamId, PDO::PARAM_INT);
 $statsStmt->execute();
 $statistiques = $statsStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -823,19 +854,11 @@ $resume = [
 ];
 
 $teamMatchCountStmt = $pdo->prepare(
-    'SELECT COUNT(*)
-     FROM (
-        SELECT
-            COALESCE(
-                CASE WHEN jm.match_id IS NOT NULL AND jm.match_id > 0 THEN CONCAT("M", jm.match_id) END,
-                CONCAT("D", DATE_FORMAT(jm.date_match, "%Y-%m-%d"), "|", COALESCE(TRIM(jm.adversaire), ""))
-            ) AS match_key
-        FROM joueur_matchs jm
-        JOIN joueurs j ON j.id = jm.joueur_id
-        WHERE jm.user_id = :user_id
-          AND j.equipe_id = :team_id' . ($selectedSeasonId > 0 ? ' AND jm.saison_id = :season_id' : '') . '
-        GROUP BY match_key
-     ) AS unique_matchs'
+        'SELECT COUNT(*)
+         FROM equipe_matchs
+         WHERE user_id = :user_id
+             AND equipe_id = :team_id
+             AND statut = "joue"' . ($selectedSeasonId > 0 ? ' AND saison_id = :season_id' : '')
 );
 $teamMatchCountStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
 $teamMatchCountStmt->bindValue(':team_id', $selectedTeamId, PDO::PARAM_INT);
@@ -859,6 +882,21 @@ if ($selectedSeasonId > 0) {
 }
 $goalsConcededStmt->execute();
 $resume['encaisses'] = (int) $goalsConcededStmt->fetchColumn();
+
+$goalsScoredStmt = $pdo->prepare(
+    'SELECT COALESCE(SUM(score_equipe), 0)
+     FROM equipe_matchs
+     WHERE user_id = :user_id
+       AND equipe_id = :team_id
+       AND statut = "joue"' . ($selectedSeasonId > 0 ? ' AND saison_id = :season_id' : '')
+);
+$goalsScoredStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+$goalsScoredStmt->bindValue(':team_id', $selectedTeamId, PDO::PARAM_INT);
+if ($selectedSeasonId > 0) {
+    $goalsScoredStmt->bindValue(':season_id', $selectedSeasonId, PDO::PARAM_INT);
+}
+$goalsScoredStmt->execute();
+$resume['buts'] = (int) $goalsScoredStmt->fetchColumn();
 
 $matchResultsStmt = $pdo->prepare(
     'SELECT
@@ -885,16 +923,18 @@ $resume['perdus'] = (int) ($matchResults['perdus'] ?? 0);
 
 $topScorer = ['nom' => 'Aucun', 'valeur' => 0];
 $topPasser = ['nom' => 'Aucun', 'valeur' => 0];
+$topGoalAssist = ['nom' => 'Aucun', 'valeur' => 0];
 $topScorerNames = [];
 $topPasserNames = [];
+$topGoalAssistNames = [];
 
 foreach ($statistiques as $statistique) {
     $resume['seances'] += (int) $statistique['seances_effectuees'];
-    $resume['buts'] += (int) $statistique['buts'];
     $resume['passes'] += (int) $statistique['passes_decisives'];
 
     $currentGoals = (int) $statistique['buts'];
     $currentAssists = (int) $statistique['passes_decisives'];
+    $currentGoalAssists = $currentGoals + $currentAssists;
     $playerName = trim((string) ($statistique['nom'] ?? ''));
 
     if ($currentGoals > $topScorer['valeur']) {
@@ -910,6 +950,13 @@ foreach ($statistiques as $statistique) {
     } elseif ($currentAssists > 0 && $currentAssists === $topPasser['valeur'] && $playerName !== '') {
         $topPasserNames[] = $playerName;
     }
+
+    if ($currentGoalAssists > $topGoalAssist['valeur']) {
+        $topGoalAssist['valeur'] = $currentGoalAssists;
+        $topGoalAssistNames = $playerName !== '' ? [$playerName] : [];
+    } elseif ($currentGoalAssists > 0 && $currentGoalAssists === $topGoalAssist['valeur'] && $playerName !== '') {
+        $topGoalAssistNames[] = $playerName;
+    }
 }
 
 if ($resume['matchs'] > 0) {
@@ -924,6 +971,10 @@ if ($topPasser['valeur'] > 0 && count($topPasserNames) > 0) {
     $topPasser['nom'] = implode(', ', array_values(array_unique($topPasserNames)));
 }
 
+if ($topGoalAssist['valeur'] > 0 && count($topGoalAssistNames) > 0) {
+    $topGoalAssist['nom'] = implode(', ', array_values(array_unique($topGoalAssistNames)));
+}
+
 $seancesSql =
     'SELECT historique.id, historique.type_source, historique.date_seance, historique.intitule, historique.commentaire, historique.nom
      FROM (
@@ -936,8 +987,17 @@ if ($selectedSeasonId > 0) {
     $seancesSql .= ' AND js.saison_id = :season_id';
 }
 
-if ($selectedSeasonId <= 0) {
-    $seancesSql .= '
+$seasonSqlFilterPlannedFeed = '';
+if ($selectedSeasonId > 0) {
+    if ($seasonStartPlanned !== '') {
+        $seasonSqlFilterPlannedFeed .= ' AND s.date_seance >= :season_start_planifiee_feed';
+    }
+    if ($seasonEndPlanned !== '') {
+        $seasonSqlFilterPlannedFeed .= ' AND s.date_seance <= :season_end_planifiee_feed';
+    }
+}
+
+$seancesSql .= '
 
         UNION ALL
 
@@ -957,8 +1017,7 @@ if ($selectedSeasonId <= 0) {
             FROM seance_exercices
             GROUP BY seance_id
         ) ex_stats ON ex_stats.seance_id = s.id
-        WHERE s.user_id = :user_id_planifie AND j.equipe_id = :team_id_planifie';
-}
+        WHERE s.user_id = :user_id_planifie AND j.equipe_id = :team_id_planifie' . $seasonSqlFilterPlannedFeed;
 
 $seancesSql .= '
      ) historique
@@ -970,9 +1029,14 @@ $seancesStmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
 $seancesStmt->bindValue(':team_id', $selectedTeamId, PDO::PARAM_INT);
 if ($selectedSeasonId > 0) {
     $seancesStmt->bindValue(':season_id', $selectedSeasonId, PDO::PARAM_INT);
-} else {
-    $seancesStmt->bindValue(':user_id_planifie', $userId, PDO::PARAM_INT);
-    $seancesStmt->bindValue(':team_id_planifie', $selectedTeamId, PDO::PARAM_INT);
+}
+$seancesStmt->bindValue(':user_id_planifie', $userId, PDO::PARAM_INT);
+$seancesStmt->bindValue(':team_id_planifie', $selectedTeamId, PDO::PARAM_INT);
+if ($selectedSeasonId > 0 && $seasonStartPlanned !== '') {
+    $seancesStmt->bindValue(':season_start_planifiee_feed', $seasonStartPlanned);
+}
+if ($selectedSeasonId > 0 && $seasonEndPlanned !== '') {
+    $seancesStmt->bindValue(':season_end_planifiee_feed', $seasonEndPlanned);
 }
 $seancesStmt->execute();
 $dernieresSeances = $seancesStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -1012,7 +1076,7 @@ $derniersMatchs = $matchsStmt->fetchAll(PDO::FETCH_ASSOC);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suivi d'equipe - MasterCoach</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= filemtime(__DIR__ . '/css/style.css') ?>">
 </head>
 <body>
     <div class="header">
@@ -1024,6 +1088,14 @@ $derniersMatchs = $matchsStmt->fetchAll(PDO::FETCH_ASSOC);
         <div class="team-flash <?= htmlspecialchars($flash[0]) ?>"><?= htmlspecialchars($flash[1]) ?></div>
     <?php endif; ?>
 
+    <nav class="team-tabs" role="tablist" aria-label="Sections du suivi d'equipe">
+        <button type="button" class="team-tab-button" id="team-tab-settings" role="tab" aria-controls="team-panel-settings" aria-selected="true" data-team-tab="settings">Équipe et saisons</button>
+        <button type="button" class="team-tab-button" id="team-tab-statistics" role="tab" aria-controls="team-panel-statistics" aria-selected="false" data-team-tab="statistics" tabindex="-1">Statistiques</button>
+        <button type="button" class="team-tab-button" id="team-tab-players" role="tab" aria-controls="team-panel-players" aria-selected="false" data-team-tab="players" tabindex="-1">Joueurs</button>
+        <button type="button" class="team-tab-button" id="team-tab-activity" role="tab" aria-controls="team-panel-activity" aria-selected="false" data-team-tab="activity" tabindex="-1">Séances et matchs</button>
+    </nav>
+
+    <section class="team-tab-panel" id="team-panel-settings" role="tabpanel" aria-labelledby="team-tab-settings" tabindex="0">
     <section class="team-panel team-panel-wide team-top-controls">
         <h2 class="section-title">Equipe et saison actives</h2>
         <div class="team-top-controls-grid">
@@ -1069,126 +1141,128 @@ $derniersMatchs = $matchsStmt->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
     </section>
-
-    <section class="team-summary-grid">
-        <article class="team-summary-card">
-            <span class="team-summary-label">Joueurs</span>
-            <strong><?= $resume['joueurs'] ?></strong>
-        </article>
-        <article class="team-summary-card">
-            <span class="team-summary-label">Seances</span>
-            <strong><?= $resume['seances'] ?></strong>
-        </article>
-        <article class="team-summary-card">
-            <span class="team-summary-label">Matchs joues</span>
-            <strong><?= $resume['matchs'] ?></strong>
-        </article>
-        <article class="team-summary-card">
-            <span class="team-summary-label">Matchs gagnes</span>
-            <strong><?= $resume['gagnes'] ?></strong>
-        </article>
-        <article class="team-summary-card">
-            <span class="team-summary-label">Matchs nuls</span>
-            <strong><?= $resume['nuls'] ?></strong>
-        </article>
-        <article class="team-summary-card">
-            <span class="team-summary-label">Matchs perdus</span>
-            <strong><?= $resume['perdus'] ?></strong>
-        </article>
-        <article class="team-summary-card">
-            <span class="team-summary-label">Buts</span>
-            <strong><?= $resume['buts'] ?></strong>
-        </article>
-        <article class="team-summary-card">
-            <span class="team-summary-label">Buts par match</span>
-            <strong><?= htmlspecialchars($resume['buts_par_match']) ?></strong>
-        </article>
-        <article class="team-summary-card">
-            <span class="team-summary-label">Buts encaisses</span>
-            <strong><?= $resume['encaisses'] ?></strong>
-        </article>
-        <article class="team-summary-card">
-            <span class="team-summary-label">Passes decisives</span>
-            <strong><?= $resume['passes'] ?></strong>
-        </article>
-        <article class="team-summary-card team-summary-leader-card">
-            <span class="team-summary-label">Meilleur buteur <?= $selectedSeasonId > 0 ? '(saison)' : '(equipe)' ?></span>
-            <strong><?= htmlspecialchars($topScorer['nom']) ?></strong>
-            <em><?= (int) $topScorer['valeur'] ?> but(s)</em>
-        </article>
-        <article class="team-summary-card team-summary-leader-card">
-            <span class="team-summary-label">Meilleur passeur <?= $selectedSeasonId > 0 ? '(saison)' : '(equipe)' ?></span>
-            <strong><?= htmlspecialchars($topPasser['nom']) ?></strong>
-            <em><?= (int) $topPasser['valeur'] ?> passe(s)</em>
-        </article>
     </section>
 
-    <div class="team-layout">
+    <section class="team-tab-panel" id="team-panel-statistics" role="tabpanel" aria-labelledby="team-tab-statistics" tabindex="0">
+    <section class="team-stat-section" aria-labelledby="team-activity-title">
+        <h2 id="team-activity-title" class="team-stat-title">Effectif et activite</h2>
+        <div class="team-summary-grid">
+            <article class="team-summary-card">
+                <span class="team-summary-label">Joueurs</span>
+                <strong><?= $resume['joueurs'] ?></strong>
+            </article>
+            <article class="team-summary-card">
+                <span class="team-summary-label">Seances</span>
+                <strong><?= $resume['seances'] ?></strong>
+            </article>
+        </div>
+    </section>
+
+    <section class="team-stat-section" aria-labelledby="team-results-title">
+        <h2 id="team-results-title" class="team-stat-title">Resultats collectifs</h2>
+        <div class="team-summary-grid">
+            <article class="team-summary-card">
+                <span class="team-summary-label">Matchs joues</span>
+                <strong><?= $resume['matchs'] ?></strong>
+            </article>
+            <article class="team-summary-card">
+                <span class="team-summary-label">Matchs gagnes</span>
+                <strong><?= $resume['gagnes'] ?></strong>
+            </article>
+            <article class="team-summary-card">
+                <span class="team-summary-label">Matchs nuls</span>
+                <strong><?= $resume['nuls'] ?></strong>
+            </article>
+            <article class="team-summary-card">
+                <span class="team-summary-label">Matchs perdus</span>
+                <strong><?= $resume['perdus'] ?></strong>
+            </article>
+            <article class="team-summary-card">
+                <span class="team-summary-label">Buts marques</span>
+                <strong><?= $resume['buts'] ?></strong>
+            </article>
+            <article class="team-summary-card">
+                <span class="team-summary-label">Buts par match</span>
+                <strong><?= htmlspecialchars($resume['buts_par_match']) ?></strong>
+            </article>
+            <article class="team-summary-card">
+                <span class="team-summary-label">Buts encaisses</span>
+                <strong><?= $resume['encaisses'] ?></strong>
+            </article>
+            <article class="team-summary-card">
+                <span class="team-summary-label">Passes decisives</span>
+                <strong><?= $resume['passes'] ?></strong>
+            </article>
+        </div>
+    </section>
+
+    <section class="team-stat-section" aria-labelledby="team-leaders-title">
+        <h2 id="team-leaders-title" class="team-stat-title">Meilleurs joueurs <?= $selectedSeasonId > 0 ? 'de la saison' : 'de l\'equipe' ?></h2>
+        <div class="team-summary-grid">
+            <article class="team-summary-card team-summary-leader-card">
+                <span class="team-summary-label">Meilleur buteur</span>
+                <strong><?= htmlspecialchars($topScorer['nom']) ?></strong>
+                <em><?= (int) $topScorer['valeur'] ?> but(s)</em>
+            </article>
+            <article class="team-summary-card team-summary-leader-card">
+                <span class="team-summary-label">Meilleur passeur</span>
+                <strong><?= htmlspecialchars($topPasser['nom']) ?></strong>
+                <em><?= (int) $topPasser['valeur'] ?> passe(s)</em>
+            </article>
+            <article class="team-summary-card team-summary-leader-card">
+                <span class="team-summary-label">Meilleur Goal Assist</span>
+                <strong><?= htmlspecialchars($topGoalAssist['nom']) ?></strong>
+                <em><?= (int) $topGoalAssist['valeur'] ?> contribution(s) (buts + passes)</em>
+            </article>
+        </div>
+    </section>
+
+    </section>
+
+    <section class="team-tab-panel" id="team-panel-players" role="tabpanel" aria-labelledby="team-tab-players" tabindex="0">
         <section class="team-panel team-panel-wide">
-            <h2 class="section-title">Actions rapides</h2>
-            <div class="form-buttons">
+            <div class="team-roster-header">
+                <h2 class="section-title">Liste des joueurs</h2>
                 <a href="joueur_ajout.php?equipe_id=<?= $selectedTeamId ?>&saison_id=<?= $selectedSeasonId ?>" class="btn btn-add">Ajouter un joueur</a>
             </div>
-        </section>
-
-        <section class="team-panel team-panel-wide">
-            <h2 class="section-title">Effectif et statistiques <?= $selectedSeasonId > 0 ? 'de la saison active' : 'cumulees' ?></h2>
-            <?php if (count($statistiques) === 0): ?>
+            <?php if (count($joueurs) === 0): ?>
                 <div class="empty-state team-empty">Aucun joueur enregistre pour le moment.</div>
             <?php else: ?>
                 <div class="position-filter-section">
-                    <span class="position-filter-label">Filtrer par poste:</span>
+                    <span class="position-filter-label">Filtrer par un ou plusieurs postes :</span>
                     <div class="position-filter-buttons">
-                        <button class="position-filter-btn active" data-position="all">Tous</button>
+                        <button type="button" class="position-filter-btn active" data-position="all" aria-pressed="true">Tous</button>
                         <?php foreach ($positionOptions as $positionOption): ?>
-                            <button class="position-filter-btn" data-position="<?= htmlspecialchars($positionOption) ?>"><?= htmlspecialchars($positionOption) ?></button>
+                            <button type="button" class="position-filter-btn" data-position="<?= htmlspecialchars($positionOption) ?>" aria-pressed="false"><?= htmlspecialchars($positionOption) ?></button>
                         <?php endforeach; ?>
                     </div>
                 </div>
-                <div class="team-table-wrapper">
-                    <table class="team-table">
-                        <thead>
-                            <tr>
-                                <th>Joueur</th>
-                                <th>Postes</th>
-                                <th>Seances</th>
-                                <th>Matchs joues</th>
-                                <th>Buts</th>
-                                <th>Buts / match</th>
-                                <th>Passes decisives</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($statistiques as $stat): ?>
-                                <tr class="player-row" data-postes="<?= htmlspecialchars($stat['poste'] ?? '') ?>">
-                                    <td data-label="Joueur"><?= htmlspecialchars($stat['nom']) ?></td>
-                                    <td data-label="Postes"><?php echo render_position_badges($stat['poste']); ?></td>
-                                    <td data-label="Seances"><?= (int) $stat['seances_effectuees'] ?></td>
-                                    <td data-label="Matchs joues"><?= (int) $stat['matchs_joues'] ?></td>
-                                    <td data-label="Buts"><?= (int) $stat['buts'] ?></td>
-                                    <td data-label="Buts / match"><?= (int) $stat['matchs_joues'] > 0 ? number_format(((int) $stat['buts']) / ((int) $stat['matchs_joues']), 2, '.', '') : '0.00' ?></td>
-                                    <td data-label="Passes decisives"><?= (int) $stat['passes_decisives'] ?></td>
-                                    <td data-label="Actions">
-                                        <div class="team-inline-actions">
-                                            <a href="joueur.php?id=<?= (int) $stat['id'] ?>&equipe_id=<?= $selectedTeamId ?>&saison_id=<?= $selectedSeasonId ?>" class="btn btn-edit team-action-btn">Profil</a>
-                                            <form method="POST" class="inline-action-form" onsubmit="return confirm('Supprimer ce joueur et toutes ses donnees ?');">
-                                                <input type="hidden" name="action" value="supprimer_joueur">
-                                                <input type="hidden" name="equipe_id" value="<?= $selectedTeamId ?>">
-                                                <input type="hidden" name="saison_id" value="<?= $selectedSeasonId ?>">
-                                                <input type="hidden" name="joueur_id" value="<?= (int) $stat['id'] ?>">
-                                                <button type="submit" class="btn btn-delete team-action-btn">Supprimer</button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                <div class="team-roster-grid">
+                    <?php foreach ($joueurs as $joueur): ?>
+                        <article class="team-roster-card player-row" data-postes="<?= htmlspecialchars($joueur['poste'] ?? '') ?>">
+                            <div class="team-roster-details">
+                                <h3><?= htmlspecialchars($joueur['nom']) ?></h3>
+                                <div class="team-roster-positions"><?php echo render_position_badges($joueur['poste']); ?></div>
+                            </div>
+                            <div class="team-inline-actions">
+                                <a href="joueur.php?id=<?= (int) $joueur['id'] ?>&equipe_id=<?= $selectedTeamId ?>&saison_id=<?= $selectedSeasonId ?>" class="btn btn-edit team-action-btn">Profil</a>
+                                <form method="POST" class="inline-action-form" onsubmit="return confirm('Supprimer ce joueur et toutes ses donnees ?');">
+                                    <input type="hidden" name="action" value="supprimer_joueur">
+                                    <input type="hidden" name="equipe_id" value="<?= $selectedTeamId ?>">
+                                    <input type="hidden" name="saison_id" value="<?= $selectedSeasonId ?>">
+                                    <input type="hidden" name="joueur_id" value="<?= (int) $joueur['id'] ?>">
+                                    <button type="submit" class="btn btn-delete team-action-btn">Supprimer</button>
+                                </form>
+                            </div>
+                        </article>
+                    <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </section>
+    </section>
 
+    <section class="team-tab-panel" id="team-panel-activity" role="tabpanel" aria-labelledby="team-tab-activity" tabindex="0">
+    <div class="team-layout">
         <section class="team-panel">
             <h2 class="section-title">Ajouter des statistiques de match</h2>
             <p>Le formulaire de saisie de match a ete deplace dans une page dediee pour alleger cette vue.</p>
@@ -1206,13 +1280,16 @@ $derniersMatchs = $matchsStmt->fetchAll(PDO::FETCH_ASSOC);
                             <strong><?= htmlspecialchars($seance['nom']) ?></strong>
                             <span><?= htmlspecialchars($seance['date_seance']) ?> - <?= htmlspecialchars($seance['intitule']) ?></span>
                             <p><?= htmlspecialchars($seance['commentaire'] ?: 'Aucun commentaire.') ?></p>
-                            <form method="POST" class="inline-action-form" onsubmit="return confirm('Supprimer cette seance ?');">
-                                <input type="hidden" name="action" value="<?= $seance['type_source'] === 'planifiee' ? 'supprimer_seance_planifiee' : 'supprimer_seance_memoire' ?>">
-                                <input type="hidden" name="equipe_id" value="<?= $selectedTeamId ?>">
-                                <input type="hidden" name="saison_id" value="<?= $selectedSeasonId ?>">
-                                <input type="hidden" name="<?= $seance['type_source'] === 'planifiee' ? 'assignation_id' : 'seance_id' ?>" value="<?= (int) $seance['id'] ?>">
-                                <button type="submit" class="btn btn-delete team-action-btn">Supprimer</button>
-                            </form>
+                            <div class="team-session-actions">
+                                <a href="seances.php?date=<?= urlencode((string) $seance['date_seance']) ?>&equipe_id=<?= $selectedTeamId ?>" class="btn btn-edit">Revoir la séance</a>
+                                <form method="POST" class="inline-action-form" onsubmit="return confirm('Supprimer cette seance ?');">
+                                    <input type="hidden" name="action" value="<?= $seance['type_source'] === 'planifiee' ? 'supprimer_seance_planifiee' : 'supprimer_seance_memoire' ?>">
+                                    <input type="hidden" name="equipe_id" value="<?= $selectedTeamId ?>">
+                                    <input type="hidden" name="saison_id" value="<?= $selectedSeasonId ?>">
+                                    <input type="hidden" name="<?= $seance['type_source'] === 'planifiee' ? 'assignation_id' : 'seance_id' ?>" value="<?= (int) $seance['id'] ?>">
+                                    <button type="submit" class="btn btn-delete">Supprimer</button>
+                                </form>
+                            </div>
                         </article>
                     <?php endforeach; ?>
                 </div>
@@ -1244,43 +1321,115 @@ $derniersMatchs = $matchsStmt->fetchAll(PDO::FETCH_ASSOC);
                                 <?= (int) $match['passes_decisives'] ?> passe(s) decisive(s),
                                 <?= (int) $match['joueurs_ayant_stats'] ?> joueur(s) renseigne(s)
                             </p>
-                            <div class="form-buttons" style="justify-content: flex-start;">
+                            <div class="form-buttons team-match-actions">
                                 <a href="match_ajout.php?equipe_id=<?= $selectedTeamId ?>&saison_id=<?= $selectedSeasonId ?>&match_id=<?= (int) $match['id'] ?>" class="btn btn-edit">Modifier</a>
+                                <form method="POST" class="inline-action-form" onsubmit="return confirm('Supprimer ce match pour l\'equipe ?');">
+                                    <input type="hidden" name="action" value="supprimer_match_equipe">
+                                    <input type="hidden" name="equipe_id" value="<?= $selectedTeamId ?>">
+                                    <input type="hidden" name="saison_id" value="<?= $selectedSeasonId ?>">
+                                    <input type="hidden" name="match_id" value="<?= (int) $match['id'] ?>">
+                                    <button type="submit" class="btn btn-delete team-action-btn">Supprimer</button>
+                                </form>
                             </div>
-                            <form method="POST" class="inline-action-form" onsubmit="return confirm('Supprimer ce match pour l\'equipe ?');">
-                                <input type="hidden" name="action" value="supprimer_match_equipe">
-                                <input type="hidden" name="equipe_id" value="<?= $selectedTeamId ?>">
-                                <input type="hidden" name="saison_id" value="<?= $selectedSeasonId ?>">
-                                <input type="hidden" name="match_id" value="<?= (int) $match['id'] ?>">
-                                <button type="submit" class="btn btn-delete team-action-btn">Supprimer</button>
-                            </form>
                         </article>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </section>
     </div>
+    </section>
     <script>
-        document.querySelectorAll('.position-filter-btn').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                document.querySelectorAll('.position-filter-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                
-                const selectedPosition = this.dataset.position;
-                const rows = document.querySelectorAll('.player-row');
-                
-                rows.forEach(row => {
-                    const postes = row.dataset.postes;
-                    
-                    if (selectedPosition === 'all') {
-                        row.style.display = '';
-                    } else {
-                        const postesList = postes.split(',').map(p => p.trim());
-                        row.style.display = postesList.includes(selectedPosition) ? '' : 'none';
-                    }
-                });
+        const teamTabButtons = Array.from(document.querySelectorAll('[role="tab"][data-team-tab]'));
+        const teamTabPanels = teamTabButtons.map(button => document.getElementById(button.getAttribute('aria-controls')));
+        const activateTeamTab = (activeButton, moveFocus = false) => {
+            teamTabButtons.forEach((button, index) => {
+                const isActive = button === activeButton;
+                button.setAttribute('aria-selected', String(isActive));
+                button.tabIndex = isActive ? 0 : -1;
+                teamTabPanels[index].hidden = !isActive;
+            });
+
+            try {
+                window.localStorage.setItem('mastercoach-team-tab', activeButton.dataset.teamTab);
+            } catch (error) {
+            }
+
+            if (moveFocus) {
+                activeButton.focus();
+            }
+
+            if (window.matchMedia('(max-width: 700px)').matches) {
+                activeButton.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+            }
+        };
+
+        if (teamTabButtons.length > 0) {
+            let savedTeamTab = '';
+            try {
+                savedTeamTab = window.localStorage.getItem('mastercoach-team-tab') || '';
+            } catch (error) {
+            }
+
+            const initialTab = teamTabButtons.find(button => button.dataset.teamTab === savedTeamTab) || teamTabButtons[0];
+            activateTeamTab(initialTab);
+
+            teamTabButtons.forEach(button => {
+                button.addEventListener('click', () => activateTeamTab(button));
+            });
+
+            document.querySelector('[role="tablist"]').addEventListener('keydown', event => {
+                const currentIndex = teamTabButtons.indexOf(document.activeElement);
+                let nextIndex = currentIndex;
+
+                if (event.key === 'ArrowRight') {
+                    nextIndex = (currentIndex + 1) % teamTabButtons.length;
+                } else if (event.key === 'ArrowLeft') {
+                    nextIndex = (currentIndex - 1 + teamTabButtons.length) % teamTabButtons.length;
+                } else if (event.key === 'Home') {
+                    nextIndex = 0;
+                } else if (event.key === 'End') {
+                    nextIndex = teamTabButtons.length - 1;
+                } else {
+                    return;
+                }
+
+                event.preventDefault();
+                activateTeamTab(teamTabButtons[nextIndex], true);
+            });
+        }
+
+        const positionFilterButtons = Array.from(document.querySelectorAll('.position-filter-btn'));
+        const selectedPositions = new Set();
+
+        const applyPositionFilter = () => {
+            positionFilterButtons.forEach(button => {
+                const isActive = button.dataset.position === 'all'
+                    ? selectedPositions.size === 0
+                    : selectedPositions.has(button.dataset.position);
+                button.classList.toggle('active', isActive);
+                button.setAttribute('aria-pressed', String(isActive));
+            });
+
+            document.querySelectorAll('.team-roster-card.player-row').forEach(row => {
+                const playerPositions = row.dataset.postes.split(',').map(position => position.trim());
+                const matchesSelection = Array.from(selectedPositions).some(position => playerPositions.includes(position));
+                row.style.display = selectedPositions.size === 0 || matchesSelection ? '' : 'none';
+            });
+        };
+
+        positionFilterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const position = button.dataset.position;
+
+                if (position === 'all') {
+                    selectedPositions.clear();
+                } else if (selectedPositions.has(position)) {
+                    selectedPositions.delete(position);
+                } else {
+                    selectedPositions.add(position);
+                }
+
+                applyPositionFilter();
             });
         });
     </script>

@@ -380,7 +380,7 @@ $flash = isset($statusMessages[$status]) ? $statusMessages[$status] : null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des matchs - MasterCoach</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= filemtime(__DIR__ . '/css/style.css') ?>">
 </head>
 <body>
     <div class="header">
@@ -466,7 +466,7 @@ $flash = isset($statusMessages[$status]) ? $statusMessages[$status] : null;
                             <?php if ($match['score_equipe'] !== null && $match['score_adverse'] !== null): ?>
                                 <span>Score: <?= (int) $match['score_equipe'] ?> - <?= (int) $match['score_adverse'] ?></span>
                             <?php endif; ?>
-                            <div class="form-buttons" style="justify-content: flex-start;">
+                            <div class="form-buttons match-history-actions">
                                 <a class="btn btn-edit" href="match_ajout.php?equipe_id=<?= $selectedTeamId ?>&saison_id=<?= $selectedSeasonId ?>&match_id=<?= (int) $match['id'] ?>">Gerer</a>
                                 <form method="POST" class="inline-action-form" onsubmit="return confirm('Supprimer ce match et ses statistiques ?');" style="margin-top: 0;">
                                     <input type="hidden" name="action" value="supprimer_match">
@@ -546,14 +546,14 @@ $flash = isset($statusMessages[$status]) ? $statusMessages[$status] : null;
                                             $isChecked = $existingStats !== null || $jid === (int) ($_GET['joueur_id'] ?? 0);
                                         ?>
                                         <tr>
-                                            <td>
+                                            <td data-label="Selection">
                                                 <input type="checkbox" class="player-match-checkbox" name="joueur_ids[]" value="<?= $jid ?>" <?= $isChecked ? 'checked' : '' ?>>
                                             </td>
-                                            <td><?= htmlspecialchars($joueur['nom']) ?></td>
-                                            <td>
+                                            <td data-label="Joueur"><?= htmlspecialchars($joueur['nom']) ?></td>
+                                            <td data-label="Buts">
                                                 <input type="number" name="buts[<?= $jid ?>]" value="<?= (int) ($existingStats['buts'] ?? 0) ?>" min="0" style="max-width: 90px;">
                                             </td>
-                                            <td>
+                                            <td data-label="Passes decisives">
                                                 <input type="number" name="passes_decisives[<?= $jid ?>]" value="<?= (int) ($existingStats['passes_decisives'] ?? 0) ?>" min="0" style="max-width: 90px;">
                                             </td>
                                         </tr>
@@ -573,7 +573,6 @@ $flash = isset($statusMessages[$status]) ? $statusMessages[$status] : null;
         const playerCheckboxes = document.querySelectorAll('.player-match-checkbox');
         const selectAllBtn = document.getElementById('select-all-players');
         const unselectAllBtn = document.getElementById('unselect-all-players');
-
         if (selectAllBtn !== null) {
             selectAllBtn.addEventListener('click', () => {
                 playerCheckboxes.forEach((checkbox) => {

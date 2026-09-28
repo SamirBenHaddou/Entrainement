@@ -5,21 +5,6 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$positionOptions = [
-    'Gardien',
-    'Defenseur central',
-    'Arriere droit',
-    'Arriere gauche',
-    'Piston droit',
-    'Piston gauche',
-    'Milieu defensif',
-    'Milieu relayeur',
-    'Milieu offensif',
-    'Ailier droit',
-    'Ailier gauche',
-    'Second attaquant',
-    'Avant-centre',
-];
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -28,7 +13,7 @@ $positionOptions = [
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des exercices</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= filemtime(__DIR__ . '/css/style.css') ?>">
     <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZK321HQVXR"></script>
 <script>
@@ -73,18 +58,6 @@ $positionOptions = [
                     <option value="individuel">Individuel</option>
                     <option value="groupe">En groupe</option>
                 </select>
-
-                <div>
-                    <span class="team-field-label">Profils joueurs cibles</span>
-                    <div class="position-selector-grid">
-                        <?php foreach ($positionOptions as $positionOption): ?>
-                            <label class="position-option">
-                                <input type="checkbox" name="ex-profils-cibles[]" value="<?= htmlspecialchars($positionOption) ?>">
-                                <span><?= htmlspecialchars($positionOption) ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
 
                 <label class="position-option" style="width: fit-content;">
                     <input type="checkbox" id="ex-favori">
@@ -169,7 +142,6 @@ $positionOptions = [
                                     data-duree="${escapeQuotes(ex.duree)}"
                                     data-materiel="${escapeQuotes(ex.materiel)}"
                                     data-format-entrainement="${escapeQuotes(ex.format_entrainement || 'mixte')}"
-                                    data-profils-cibles="${escapeQuotes(ex.profils_cibles || '')}"
                                     data-favori="${Number(ex.favori) === 1 ? '1' : '0'}"
                                 >Modifier</button>
                                 <button class="btn btn-delete" onclick="deleteExercise('${ex.id}')">Supprimer</button>
@@ -191,10 +163,6 @@ $positionOptions = [
                                 <div class="detail-item">
                                     <strong>Type :</strong><br>
                                     ${formatTrainingType(ex.format_entrainement)}
-                                </div>
-                                <div class="detail-item">
-                                    <strong>Profils ciblés :</strong><br>
-                                    ${ex.profils_cibles || 'Tous profils'}
                                 </div>
                             </div>
                         </div>
@@ -232,13 +200,11 @@ $positionOptions = [
             const duree = document.getElementById('ex-duree').value;
             const materiel = document.getElementById('ex-materiel').value;
             const formatEntrainement = document.getElementById('ex-format-entrainement').value;
-            const profilsCibles = Array.from(document.querySelectorAll('input[name="ex-profils-cibles[]"]:checked')).map(input => input.value);
             const favori = document.getElementById('ex-favori').checked ? '1' : '0';
             const formData = new URLSearchParams({
                 id, nom, categorie, description, duree, materiel, format_entrainement: formatEntrainement, favori,
                 action: id ? 'modifier' : 'ajouter'
             });
-            profilsCibles.forEach(profil => formData.append('profils_cibles[]', profil));
             fetch('api_exercices.php', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
@@ -256,7 +222,7 @@ $positionOptions = [
         };
 
         // Pré-remplir le formulaire pour modification
-        function editExercise(id, nom, categorie, description, duree, materiel, formatEntrainement, profilsCibles, favori) {
+        function editExercise(id, nom, categorie, description, duree, materiel, formatEntrainement, favori) {
             document.getElementById('ex-id').value = id;
             document.getElementById('ex-nom').value = nom;
             document.getElementById('ex-categorie').value = categorie;
@@ -264,10 +230,6 @@ $positionOptions = [
             document.getElementById('ex-duree').value = duree;
             document.getElementById('ex-materiel').value = materiel;
             document.getElementById('ex-format-entrainement').value = formatEntrainement || 'mixte';
-            const selectedProfils = String(profilsCibles || '').split(',').map(value => value.trim()).filter(Boolean);
-            document.querySelectorAll('input[name="ex-profils-cibles[]"]').forEach(input => {
-                input.checked = selectedProfils.includes(input.value);
-            });
             document.getElementById('ex-favori').checked = Number(favori) === 1;
             document.getElementById('ex-submit').textContent = "Modifier";
             document.getElementById('ex-cancel').style.display = "block";
@@ -282,9 +244,6 @@ $positionOptions = [
             document.getElementById('ex-cancel').style.display = "none";
             document.getElementById('ex-favori').checked = false;
             document.getElementById('ex-format-entrainement').value = 'mixte';
-            document.querySelectorAll('input[name="ex-profils-cibles[]"]').forEach(input => {
-                input.checked = false;
-            });
         }
 
         function formatTrainingType(value) {
@@ -358,7 +317,6 @@ $positionOptions = [
                 btn.getAttribute('data-duree'),
                 btn.getAttribute('data-materiel'),
                 btn.getAttribute('data-format-entrainement'),
-                btn.getAttribute('data-profils-cibles'),
                 btn.getAttribute('data-favori')
             );
         }
