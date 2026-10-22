@@ -27,7 +27,7 @@ if (!isset($_SESSION['user_id'])) {
 
 <body>
     <div class="header">
-  <h1>🏋️‍♂️ Gestion des Exercices</h1>
+  <div class="header-brand"><img src="img/mastercoach.png" alt="MasterCoach" class="site-logo"><h1>🏋️‍♂️ Gestion des Exercices</h1></div>
   <a href="home.php" class="home-btn">🏠 Accueil</a>
 </div>
 

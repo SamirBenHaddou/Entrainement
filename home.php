@@ -28,6 +28,7 @@ $email = isset($_SESSION['email']) ? $_SESSION['email'] : 'Utilisateur';
 
 <body>
   <header class="header">
+    <a href="home.php" class="header-brand"><img src="img/mastercoach.png" alt="MasterCoach" class="site-logo"></a>
     <div class="welcome">Bienvenue, <strong><?= htmlspecialchars($email) ?></strong></div>
     <form action="logout.php" method="POST" class="logout-form">
       <button type="submit" class="btn-logout">Déconnexion</button>

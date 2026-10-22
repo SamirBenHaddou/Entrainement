@@ -863,7 +863,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 <body class="planner-page">
     <div class="header">
-  <h1>🏃‍♂️ Planificateur d'Entraînement</h1>
+  <div class="header-brand"><img src="img/mastercoach.png" alt="MasterCoach" class="site-logo"><h1>🏃‍♂️ Planificateur d'Entraînement</h1></div>
   <a href="home.php" class="home-btn">🏠 Accueil</a>
 </div>
 

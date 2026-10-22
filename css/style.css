@@ -3,7 +3,7 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #061633 0%, #0a2a5c 55%, #0b5f86 100%);
   min-height: 100vh;
   color: #222;
 }
@@ -56,7 +56,7 @@ input[type="password"]::placeholder {
 button[type="submit"] {
   width: 100%;
   padding: 12px;
-  background: #ff6b6b;
+  background: #14b8a6;
   color: white;
   border: none;
   border-radius: 25px;
@@ -67,19 +67,19 @@ button[type="submit"] {
 }
 
 button[type="submit"]:hover {
-  background: #ff5252;
+  background: #0ea5a4;
   transform: translateY(-2px);
 }
 
 .switch-link {
-  color: #ffd93d;
+  color: #5eead4;
   cursor: pointer;
   text-decoration: underline;
   transition: color 0.3s ease;
 }
 
 .switch-link:hover {
-  color: #ffed4e;
+  color: #a7f3ea;
 }
 
 .hidden {
@@ -88,7 +88,7 @@ button[type="submit"]:hover {
 }
 
 .error {
-  color: #ff6b6b;
+  color: #ff8a8a;
   background: rgba(255, 107, 107, 0.1);
   padding: 10px;
   border-radius: 5px;
@@ -97,8 +97,8 @@ button[type="submit"]:hover {
 }
 
 .success {
-  color: #4ecdc4;
-  background: rgba(78, 205, 196, 0.1);
+  color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.1);
   padding: 10px;
   border-radius: 5px;
   margin-bottom: 1em;
@@ -125,7 +125,7 @@ button[type="submit"]:hover {
 }
 
 .home-btn {
-  background: #ff6b6b;
+  background: #14b8a6;
   color: white;
   padding: 0.6em 1.2em;
   border-radius: 25px;
@@ -140,7 +140,7 @@ button[type="submit"]:hover {
 }
 
 .home-btn:hover {
-  background: #ff5252;
+  background: #0ea5a4;
 }
 
 /* Responsive header */
@@ -223,7 +223,7 @@ button[type="submit"]:hover {
 .add-form textarea:focus {
   outline: none;
   background: white;
-  box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.3);
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.3);
 }
 
 .add-form textarea {
@@ -334,7 +334,7 @@ button[type="submit"]:hover {
 }
 
 .btn-add {
-  background: #4ecdc4;
+  background: #2dd4bf;
   color: white;
 }
 
@@ -346,7 +346,7 @@ button[type="submit"]:hover {
 
 .btn-delete,
 .remove-btn {
-  background: #ff6b6b;
+  background: #14b8a6;
   color: white;
   padding: 8px 16px;
   font-size: 1em;
@@ -377,9 +377,9 @@ button[type="submit"]:hover {
   display: inline-block;
   margin: 0 5px 10px 5px;
   padding: 8px 16px;
-  border: 2px solid #4ecdc4;
+  border: 2px solid #2dd4bf;
   border-radius: 20px;
-  color: #4ecdc4;
+  color: #2dd4bf;
   background: transparent;
   font-weight: 600;
   text-decoration: none;
@@ -390,7 +390,7 @@ button[type="submit"]:hover {
 
 .filters .filter-btn:hover,
 .filters .filter-btn.active {
-  background-color: #4ecdc4;
+  background-color: #2dd4bf;
   color: white;
   transform: translateY(-2px);
 }
@@ -437,7 +437,7 @@ button[type="submit"]:hover {
 .planning-filter-header h3 {
   margin: 0;
   font-size: 1.05rem;
-  color: #1f2a44;
+  color: #0a2a5c;
 }
 
 .planning-filter-header p {
@@ -506,7 +506,7 @@ button[type="submit"]:hover {
 
 .planning-ai-box h3 {
   margin: 0 0 12px 0;
-  color: #1f2a44;
+  color: #0a2a5c;
   font-size: 1rem;
 }
 
@@ -568,17 +568,17 @@ button[type="submit"]:hover {
 
 .planning-quick-filters .filter-btn:hover,
 .planning-quick-filters .filter-btn.active {
-  background: linear-gradient(135deg, #4ecdc4 0%, #2bb5ac 100%);
+  background: linear-gradient(135deg, #2be0c0 0%, #1aa6c9 100%);
   border-color: transparent;
   color: white;
   transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(78, 205, 196, 0.24);
+  box-shadow: 0 10px 20px rgba(45, 212, 191, 0.24);
 }
 
 .summary {
   background: rgba(255, 255, 255, 0.14);
   border-radius: 16px;
-  color: #1f2a44;
+  color: #0a2a5c;
   text-align: center;
   padding: 16px 18px;
   font-size: 1.05rem;
@@ -666,13 +666,13 @@ button[type="submit"]:hover {
 }
 
 .card-front {
-  background: linear-gradient(135deg, #ffafcc 0%, #bde0fe 100%);
+  background: linear-gradient(135deg, #1aa6c9 0%, #0a4a8f 100%);
   justify-content: flex-start;
   gap: 12px;
 }
 
 .card-back {
-  background: linear-gradient(135deg, #bde0fe 0%, #ffafcc 100%);
+  background: linear-gradient(135deg, #0a4a8f 0%, #1aa6c9 100%);
   transform: rotateY(180deg);
   text-align: left;
   align-items: stretch;
@@ -741,7 +741,7 @@ button[type="submit"]:hover {
 }
 
 .exercise-category {
-  background: #ffe0f7;
+  background: #e0f7fa;
   color: #6d6875;
   padding: 6px 18px;
   border-radius: 20px;
@@ -859,14 +859,14 @@ button[type="submit"]:hover {
 
   .selected-mobile-header h2 {
     margin: 0;
-    color: #1f2a44;
+    color: #0a2a5c;
     font-size: 1.05rem;
   }
 
   .planning-toolbar .section-title,
   .selected-section .section-title,
   .team-assignment h3 {
-    color: #1f2a44;
+    color: #0a2a5c;
   }
 
   .selected-mobile-header .btn {
@@ -906,7 +906,7 @@ button[type="submit"]:hover {
     border: none;
     border-radius: 999px;
     padding: 12px 18px;
-    background: linear-gradient(135deg, #4ecdc4 0%, #2bb5ac 100%);
+    background: linear-gradient(135deg, #2be0c0 0%, #1aa6c9 100%);
     color: white;
     font-weight: 700;
     font-size: 0.95rem;
@@ -1030,7 +1030,7 @@ button[type="submit"]:hover {
 .selected-exercise-card.drag-over .card-front,
 .selected-exercise-card.drag-over .card-back {
   box-shadow:
-    0 0 0 3px rgba(78, 205, 196, 0.45),
+    0 0 0 3px rgba(45, 212, 191, 0.45),
     0 14px 30px rgba(0, 0, 0, 0.12);
 }
 
@@ -1077,7 +1077,7 @@ button[type="submit"]:hover {
 }
 
 .btn-logout {
-  background: #ff6b6b;
+  background: #14b8a6;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -1087,7 +1087,7 @@ button[type="submit"]:hover {
 }
 
 .btn-logout:hover {
-  background: #ff5252;
+  background: #0ea5a4;
   transform: translateY(-2px);
 }
 
@@ -1179,11 +1179,11 @@ button[type="submit"]:hover {
 .team-tab-button[aria-selected="true"] {
   border-color: white;
   background: white;
-  color: #1f2a44;
+  color: #0a2a5c;
 }
 
 .team-tab-button:focus-visible {
-  outline: 3px solid #4ecdc4;
+  outline: 3px solid #2dd4bf;
   outline-offset: 2px;
 }
 
@@ -1491,7 +1491,7 @@ button[type="submit"]:hover {
 
 .position-badge {
   display: inline-block;
-  background: linear-gradient(135deg, #4ecdc4 0%, #44b3aa 100%);
+  background: linear-gradient(135deg, #2be0c0 0%, #1aa6c9 100%);
   color: white;
   padding: 6px 12px;
   border-radius: 20px;
@@ -1543,9 +1543,9 @@ button[type="submit"]:hover {
 }
 
 .position-filter-btn.active {
-  background: #4ecdc4;
+  background: #2dd4bf;
   color: white;
-  border-color: #4ecdc4;
+  border-color: #2dd4bf;
 }
 
 .player-notes-grid {
@@ -1604,7 +1604,7 @@ button[type="submit"]:hover {
 .team-assignment h3 {
   margin-top: 0;
   margin-bottom: 14px;
-  color: #1f2a44;
+  color: #0a2a5c;
   text-align: center;
 }
 
@@ -1641,7 +1641,7 @@ button[type="submit"]:hover {
   background: rgba(255, 255, 255, 0.9);
   border-radius: 12px;
   padding: 10px 12px;
-  color: #1f2a44;
+  color: #0a2a5c;
   cursor: pointer;
   border: 1px solid rgba(31, 42, 68, 0.1);
 }
@@ -1663,7 +1663,7 @@ button[type="submit"]:hover {
 }
 
 .team-assignment .empty-state {
-  color: #1f2a44;
+  color: #0a2a5c;
   background: rgba(255, 255, 255, 0.88);
   border-radius: 12px;
 }
@@ -2083,5 +2083,40 @@ button[type="submit"]:hover {
     max-width: none;
     margin: 0;
     box-sizing: border-box;
+  }
+}
+
+/* === LOGO === */
+.site-logo {
+  display: block;
+  margin: 0 auto 1em;
+  width: 150px;
+  max-width: 60%;
+  height: auto;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+
+.container .site-logo {
+  width: 200px;
+  margin-bottom: 0.5em;
+}
+
+.header .site-logo {
+  width: 64px;
+  max-width: none;
+  margin: 0 1em 0 0;
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+@media (max-width: 600px) {
+  .header-brand {
+    justify-content: center;
   }
 }

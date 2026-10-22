@@ -213,7 +213,7 @@ $matchs = $matchsStmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
     <div class="header">
-        <h1>Feuille matchs: <?= htmlspecialchars($joueur['nom']) ?></h1>
+        <div class="header-brand"><img src="img/mastercoach.png" alt="MasterCoach" class="site-logo"><h1>Feuille matchs: <?= htmlspecialchars($joueur['nom']) ?></h1></div>
         <a href="joueur.php?id=<?= (int) $joueur['id'] ?>&saison_id=<?= $selectedSeasonId ?>" class="home-btn">Retour profil</a>
     </div>
 

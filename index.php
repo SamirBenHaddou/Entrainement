@@ -84,7 +84,7 @@ if (isset($_SESSION['user_id'])) {
 <body>
 
   <div class="header">
-    <h1>Connexion / Inscription</h1>
+    <div class="header-brand"><img src="img/mastercoach.png" alt="MasterCoach" class="site-logo"><h1>Connexion / Inscription</h1></div>
     <a href="home.php" class="home-btn">🏠 Accueil</a>
   </div>
 

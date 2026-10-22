@@ -157,7 +157,7 @@ $status = $_GET['status'] ?? null;
 </head>
 <body>
     <div class="header">
-        <h1>Ajouter un joueur</h1>
+        <div class="header-brand"><img src="img/mastercoach.png" alt="MasterCoach" class="site-logo"><h1>Ajouter un joueur</h1></div>
         <a href="equipe.php?equipe_id=<?= $selectedTeamId ?>&saison_id=<?= $selectedSeasonId ?>" class="home-btn">Retour equipe</a>
     </div>
 

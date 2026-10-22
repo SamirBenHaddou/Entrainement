@@ -1080,7 +1080,7 @@ $derniersMatchs = $matchsStmt->fetchAll(PDO::FETCH_ASSOC);
 </head>
 <body>
     <div class="header">
-        <h1>Equipe et Statistiques</h1>
+        <div class="header-brand"><img src="img/mastercoach.png" alt="MasterCoach" class="site-logo"><h1>Equipe et Statistiques</h1></div>
         <a href="home.php" class="home-btn">Accueil</a>
     </div>
 
