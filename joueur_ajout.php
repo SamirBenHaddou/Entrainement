@@ -154,6 +154,14 @@ $status = $_GET['status'] ?? null;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ajouter un joueur - MasterCoach</title>
     <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#0a2a5c">
+  <link rel="icon" type="image/png" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MasterCoach">
+  <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js'); }); }</script>
 </head>
 <body>
     <div class="header">
