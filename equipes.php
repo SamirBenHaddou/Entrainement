@@ -203,7 +203,7 @@ $flash = isset($statusMessages[$status]) ? $statusMessages[$status] : null;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des equipes - MasterCoach</title>
     <link rel="stylesheet" href="css/style.css">
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a2a5c">
   <link rel="icon" type="image/png" href="img/icon-192.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">

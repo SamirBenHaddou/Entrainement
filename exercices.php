@@ -23,7 +23,7 @@ if (!isset($_SESSION['user_id'])) {
 
   gtag('config', 'G-ZK321HQVXR');
 </script>
-  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a2a5c">
   <link rel="icon" type="image/png" href="img/icon-192.png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
