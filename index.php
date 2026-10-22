@@ -69,7 +69,7 @@ if (isset($_SESSION['user_id'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Planificateur d'Entraînement - MasterCoach</title>
   <meta name="description" content="Créez et planifiez vos séances d'entraînement personnalisées avec MasterCoach. Suivi, conseils et exercices adaptés à tous les niveaux.">
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css?v=<?= filemtime(__DIR__ . '/css/style.css') ?>" />
     <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ZK321HQVXR"></script>
 <script>

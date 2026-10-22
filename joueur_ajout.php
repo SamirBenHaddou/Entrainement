@@ -153,7 +153,7 @@ $status = $_GET['status'] ?? null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ajouter un joueur - MasterCoach</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=<?= filemtime(__DIR__ . '/css/style.css') ?>">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a2a5c">
   <link rel="icon" type="image/png" href="img/icon-192.png">
